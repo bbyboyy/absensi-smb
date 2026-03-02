@@ -3,6 +3,9 @@ const SUPABASE_KEY = "sb_publishable_zpLeYA-F1nhVC4r4O1i_PQ_qnAvtaFi";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const ABSEN_START = 6;   // buka jam 06:00
+const LATE_START = 10;   // terlambat mulai 10:00
+const ABSEN_END = 12;    // tutup jam 12:00
 
 // REGISTER SERVICE WORKER
 if ('serviceWorker' in navigator) {
@@ -46,6 +49,111 @@ function goToAdmin() {
     window.location.href = "admin.html";
 }
 
+// INIT HEADER
+async function initHeader() {
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    // ambil profile dari table
+    const { data: profile, error } = await supabaseClient
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+
+    const now = new Date();
+
+    const options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+
+    let displayName = user.email;
+
+    if (profile && profile.name) {
+        displayName = profile.name;
+    }
+
+    document.getElementById("greeting").innerText =
+        `Selamat Datang, ${displayName} 🙏`;
+
+    document.getElementById("todayDate").innerText =
+        now.toLocaleDateString("id-ID", options);
+}
+
+async function checkTodayAttendance() {
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    if (!user) return;
+
+    const today = new Date();
+    const day = today.getDay(); // 0 = Minggu
+    const hour = today.getHours();
+
+    const statusElement = document.getElementById("attendanceStatus");
+    const btnAbsen = document.getElementById("btnAbsen");
+
+    // Default disable dulu
+    btnAbsen.disabled = true;
+
+    // Kalau bukan Minggu
+    if (day !== 0) {
+        statusElement.innerHTML = "⛔ Bukan Hari Absensi";
+        statusElement.style.color = "gray";
+        btnAbsen.innerText = "ABSEN TIDAK TERSEDIA";
+        return;
+    }
+
+    if (hour < ABSEN_START) {
+        statusElement.innerHTML = "⏳ Absensi dibuka pukul 06:00";
+        statusElement.style.color = "orange";
+        btnAbsen.innerText = "BELUM WAKTU";
+        return;
+    }
+
+    if (hour >= ABSEN_END) {
+        statusElement.innerHTML = "⌛ Absensi sudah ditutup (12:00)";
+        statusElement.style.color = "red";
+        btnAbsen.innerText = "ABSEN DITUTUP";
+        return;
+    }
+
+    // Ambil tanggal hari ini format YYYY-MM-DD
+    const todayStr = today.toISOString().split("T")[0];
+
+    const { data, error } = await supabaseClient
+        .from("attendance")
+        .select("*")
+        .eq("userid", user.id)
+        .gte("timestamp", todayStr + "T00:00:00")
+        .lte("timestamp", todayStr + "T23:59:59");
+
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    if (data.length > 0) {
+        statusElement.innerHTML = "✅ Sudah Absen Hari Ini";
+        statusElement.style.color = "green";
+        btnAbsen.innerText = "SUDAH ABSEN";
+        btnAbsen.disabled = true;
+    } else {
+        statusElement.innerHTML = "❌ Belum Absen Hari Ini";
+        statusElement.style.color = "red";
+        btnAbsen.innerText = "ABSEN HADIR";
+        btnAbsen.disabled = false;
+    }
+}
+
 const OFFICE_LAT = -6.262410;
 const OFFICE_LNG = 106.589714;
 const MAX_RADIUS = 20; // meter
@@ -74,7 +182,12 @@ async function absen() {
             return;
         }
 
-        // VALIDASI RADIUS (contoh)
+        // VALIDASI JAM
+        const hour = new Date().getHours();
+        let status = "Hadir";
+        if (hour >= LATE_START) {
+            status = "Terlambat";
+        }
 
         const jarak = hitungJarak(lat, lng, OFFICE_LAT, OFFICE_LNG);
 
@@ -91,16 +204,18 @@ async function absen() {
                     userid: user.data.user.id,
                     latitude: lat,
                     longitude: lng,
-                    status: "VALID"
+                    status: status
                 }
             ]);
 
         if (error) {
-            console.log(error);
             alert("Gagal absen");
-        } else {
-            alert("Absen berhasil");
+            console.log(error);
+            return;
         }
+
+        alert("Absen berhasil (" + status + ")");
+        await checkTodayAttendance();
 
     });
 }
@@ -346,3 +461,14 @@ if (window.location.pathname.includes("absen.html")) {
     });
 }
 
+document.addEventListener("DOMContentLoaded", async () => {
+
+    if (window.location.pathname.includes("dashboard.html")) {
+        await initHeader();
+        await checkTodayAttendance();
+        loadMap();
+        startLiveLocation();
+        loadHistory();
+    }
+
+});

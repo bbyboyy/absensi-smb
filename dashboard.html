@@ -7,14 +7,48 @@
 </head>
 <body>
 
-<h2>Dashboard</h2>
+<div class="container">
 
-<button onclick="goToAbsen()">Absen</button>
-<button onclick="goToAdmin()">Admin Panel</button>
-<button onclick="logout()">Logout</button>
+    <!-- HEADER -->
+    <div class="card header-card">
+        <h2 id="greeting">Selamat Datang 🙏</h2>
+        <p id="todayDate"></p>
+        <p id="attendanceStatus"></p>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <!-- STATUS CARD -->
+    <!-- <div class="card status-card">
+        <h3>Status Hari Ini</h3>
+        <p id="statusHari"></p>
+    </div> -->
+
+    <!-- MAP CARD -->
+    <div class="card">
+        <div id="map"></div>
+        <div id="distanceInfo"></div>
+    </div>
+
+    <!-- ABSEN BUTTON -->
+    <button id="btnAbsen" class="absen-btn">
+        ABSEN HADIR
+    </button>
+
+    <!-- HISTORY -->
+    <div class="card">
+        <h3>Riwayat Minggu Terakhir</h3>
+        <ul id="historyList"></ul>
+    </div>
+
+</div>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- App -->
 <script src="app.js"></script>
-
 </body>
 </html>

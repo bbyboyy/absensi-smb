@@ -52,6 +52,7 @@ const MAX_RADIUS = 20; // meter
 
 // ABSEN
 async function absen() {
+    alert("Absens Clicked");
     const statusText = document.getElementById("status");
 
     if (!navigator.geolocation) {
@@ -226,13 +227,33 @@ function startLiveLocation() {
 
             const info = document.getElementById("distanceInfo");
 
-            if (distance <= MAX_RADIUS) {
-                info.innerHTML = `✅ Dalam radius kantor (${distance.toFixed(1)} meter)`;
-                info.style.color = "green";
+            const accuracy = position.coords.accuracy;
+            let statusText = "";
+            let statusColor = "";
+
+            // if (distance <= MAX_RADIUS) {
+            //     info.innerHTML = `✅ Dalam radius kantor (${distance.toFixed(1)} meter)`;
+            //     info.style.color = "green";
+            // } else {
+            //     info.innerHTML = `❌ Di luar radius (${distance.toFixed(1)} meter)`;
+            //     info.style.color = "red";
+            // }
+
+            if (distance <= OFFICE_RADIUS) {
+                statusText = "✅ Dalam radius kantor";
+                statusColor = "green";
             } else {
-                info.innerHTML = `❌ Di luar radius (${distance.toFixed(1)} meter)`;
-                info.style.color = "red";
+                statusText = "❌ Di luar radius";
+                statusColor = "red";
             }
+
+            info.innerHTML = `
+                ${statusText}<br>
+                📏 Jarak: ${distance.toFixed(1)} meter<br>
+                📡 Akurasi GPS: ±${accuracy.toFixed(1)} meter
+            `;
+
+            info.style.color = statusColor;     
 
             if (!map) {
                 map = L.map('map').setView([lat, lng], 16);

@@ -4,6 +4,9 @@
     <title>Absen</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -12,6 +15,19 @@
 <p id="status">Menunggu lokasi...</p>
 
 <button onclick="absen()">Absen Sekarang</button>
+
+<hr>
+
+<h3>History Absen</h3>
+<div id="historyList"></div>
+
+<button onclick="loadHistory()">Refresh History</button>
+
+<hr>
+
+<h3>Peta Lokasi Absen</h3>
+<div id="map" style="height:400px;"></div>
+<div id="distanceInfo" style="margin-top:10px;font-weight:bold;"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="app.js"></script>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Admin Panel</h2>
+
+<h3>Tambah User</h3>
+
+<input type="email" id="newEmail" placeholder="Email">
+<input type="password" id="newPassword" placeholder="Password">
+<input type="text" id="newName" placeholder="Nama">
+<select id="newRole">
+    <option value="user">User</option>
+    <option value="admin">Admin</option>
+</select>
+
+<button onclick="createUser()">Tambah User</button>
+
+<hr>
+
+<h3>Daftar User</h3>
+<div id="userList"></div>
+
+<hr>
+
+<h3>Data Absensi</h3>
+<div id="attendanceList"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="app.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>

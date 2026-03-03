@@ -463,7 +463,7 @@ function startLiveLocation() {
 
             if (distance <= MAX_RADIUS) {
                 box.className = "mt-3 p-3 rounded-xl text-sm font-medium bg-green-50 text-green-700";
-                statusText = "✅ Dalam radius kantor";
+                statusText = "✅ Dalam radius vihara";
             } else {
                 box.className = "mt-3 p-3 rounded-xl text-sm font-medium bg-red-50 text-red-700";
                 statusText = "❌ Di luar radius";

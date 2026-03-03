@@ -2,33 +2,57 @@
 <html>
 <head>
     <title>Admin Panel</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen p-6">
 
-<h2>Admin Panel</h2>
+    <div class="max-w-5xl mx-auto space-y-8">
+        <h2 class="text-3xl font-bold">
+            🔐 Admin Panel
+        </h2>
 
-<h3>Tambah User</h3>
+        <!-- CARD TAMBAH USER -->
+        <div class="bg-white p-6 rounded-2xl shadow-md">
+            <h3 class="text-xl font-semibold mb-4">Tambah User</h3>
 
-<input type="email" id="newEmail" placeholder="Email">
-<input type="password" id="newPassword" placeholder="Password">
-<input type="text" id="newName" placeholder="Nama">
-<select id="newRole">
-    <option value="user">User</option>
-    <option value="admin">Admin</option>
-</select>
+            <div class="grid md:grid-cols-2 gap-4">
 
-<button onclick="createUser()">Tambah User</button>
+                <input type="email" id="newEmail" placeholder="Email"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
 
-<hr>
+                <input type="password" id="newPassword" placeholder="Password"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
 
-<h3>Daftar User</h3>
-<div id="userList"></div>
+                <input type="text" id="newName" placeholder="Nama"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
 
-<hr>
+                <select id="newRole"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
 
-<h3>Data Absensi</h3>
-<div id="attendanceList"></div>
+            </div>
+
+            <button onclick="createUser()"
+                class="mt-4 w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                Tambah User
+            </button>
+        </div>
+
+        <!-- CARD USER LIST -->
+        <div class="bg-white p-6 rounded-2xl shadow-md">
+            <h3 class="text-xl font-semibold mb-4">Daftar User</h3>
+            <div id="userList" class="space-y-2"></div>
+        </div>
+
+        <!-- CARD ABSENSI -->
+        <div class="bg-white p-6 rounded-2xl shadow-md">
+            <h3 class="text-xl font-semibold mb-4">Data Absensi</h3>
+            <div id="attendanceList" class="space-y-2"></div>
+        </div>
+    </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="app.js"></script>

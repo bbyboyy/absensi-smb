@@ -12,6 +12,27 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js');
 }
 
+// CHECK ROLE ADMIN
+async function checkRole() {
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    if (data?.role === "admin") {
+        document.getElementById("btnAdmin").style.display = "block";
+    }
+}
 
 // LOGIN
 async function login() {
@@ -49,6 +70,27 @@ function goToAdmin() {
     window.location.href = "admin.html";
 }
 
+// BTN LISTENER
+document.getElementById("btnAbsen")
+    .addEventListener("click", async () => {
+        await absen();
+})
+
+document.getElementById("btnAdmin")
+    .addEventListener("click", async () => {
+        await goToAdmin();
+})
+
+document.getElementById("btnLogout")
+    .addEventListener("click", async () => {
+        await logout();
+})
+
+document.getElementById("btnIzin")
+    .addEventListener("click", async () => {
+        await kirimIzin();
+})
+
 // INIT HEADER
 async function initHeader() {
 
@@ -81,8 +123,11 @@ async function initHeader() {
         displayName = profile.name;
     }
 
-    document.getElementById("greeting").innerText =
-        `Selamat Datang, ${displayName} 🙏`;
+    // document.getElementById("greeting").innerText =
+    //     `Selamat Datang, ${displayName} 🙏`;
+
+    document.getElementById("userName").innerText = 
+        displayName;
 
     document.getElementById("todayDate").innerText =
         now.toLocaleDateString("id-ID", options);
@@ -160,7 +205,7 @@ const MAX_RADIUS = 20; // meter
 
 // ABSEN
 async function absen() {
-    alert("Absens Clicked");
+    alert("Absen Clicked");
     const statusText = document.getElementById("status");
 
     if (!navigator.geolocation) {
@@ -220,6 +265,44 @@ async function absen() {
     });
 }
 
+// IZIN
+async function kirimIzin() {
+
+    const reason = document.getElementById("izinReason").value.trim();
+
+    if (!reason) {
+        alert("Isi alasan terlebih dahulu.");
+        return;
+    }
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabaseClient
+        .from("attendance")
+        .insert([
+            {
+                userid: user.id,
+                latitude: null,
+                longitude: null,
+                status: "Izin",
+                reason: reason
+            }
+        ]);
+
+    if (error) {
+        alert("Gagal kirim izin.");
+        console.log(error);
+        return;
+    }
+
+    alert("Izin berhasil dikirim 🙏");
+
+    document.getElementById("izinReason").value = "";
+
+    await checkTodayAttendance();
+}
+
 async function loadHistory() {
     const { data: { user } } = await supabaseClient.auth.getUser();
 
@@ -239,7 +322,7 @@ async function loadHistory() {
         return;
     }
 
-    const container = document.getElementById("historyList");
+    const container = document.getElementById("riwayatList");
     container.innerHTML = "";
 
     if (data.length === 0) {
@@ -248,14 +331,36 @@ async function loadHistory() {
     }
 
     data.forEach(item => {
-        const tanggal = new Date(item.timestamp).toLocaleString();
-        console.log(tanggal)
+        // let statusClass = "";
+        // let statusIcon = "";
+
+        // if (item.status === "Hadir") {
+        //     statusClass = "status-hadir";
+        //     statusIcon = "✅";
+        // }
+
+        // if (item.status === "Terlambat") {
+        //     statusClass = "status-terlambat";
+        //     statusIcon = "⏰";
+        // }
+
+        // if (item.status === "Izin") {
+        //     statusClass = "status-izin";
+        //     statusIcon = "📝";
+        // }
+
+        // const tanggal = new Date(item.timestamp).toLocaleString();
+        // console.log(tanggal)
 
         container.innerHTML += `
-            <div class="card">
-                <b>${tanggal}</b><br>
-                Status: ${item.status}<br>
-                Lokasi: ${item.latitude}, ${item.longitude}
+            <div class="bg-white border-l-4 ${getStatusColor(item.status)}
+                        p-3 rounded-lg shadow-sm">
+
+                <div class="font-medium">${item.status}</div>
+                <div class="text-sm text-gray-500">
+                    ${new Date(item.timestamp).toLocaleString()}
+                </div>
+                ${item.reason ? `<div class="text-sm mt-1">🗒️ ${item.reason}</div>` : ""}
             </div>
         `;
     });
@@ -340,7 +445,9 @@ function startLiveLocation() {
                 OFFICE_LNG
             );
 
-            const info = document.getElementById("distanceInfo");
+            // const info = document.getElementById("distanceInfo");
+            const box = document.getElementById("distanceInfo");
+            box.classList.remove("hidden");
 
             const accuracy = position.coords.accuracy;
             let statusText = "";
@@ -354,21 +461,19 @@ function startLiveLocation() {
             //     info.style.color = "red";
             // }
 
-            if (distance <= OFFICE_RADIUS) {
+            if (distance <= MAX_RADIUS) {
+                box.className = "mt-3 p-3 rounded-xl text-sm font-medium bg-green-50 text-green-700";
                 statusText = "✅ Dalam radius kantor";
-                statusColor = "green";
             } else {
+                box.className = "mt-3 p-3 rounded-xl text-sm font-medium bg-red-50 text-red-700";
                 statusText = "❌ Di luar radius";
-                statusColor = "red";
             }
 
-            info.innerHTML = `
+            box.innerHTML = `
                 ${statusText}<br>
                 📏 Jarak: ${distance.toFixed(1)} meter<br>
                 📡 Akurasi GPS: ±${accuracy.toFixed(1)} meter
-            `;
-
-            info.style.color = statusColor;     
+            `;   
 
             if (!map) {
                 map = L.map('map').setView([lat, lng], 16);
@@ -451,6 +556,40 @@ function hitungJarak(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
+function getStatusColor(status) {
+    if (status === "Hadir")
+        return "border-green-500";
+
+    if (status === "Terlambat")
+        return "border-orange-500";
+
+    if (status === "Izin")
+        return "border-blue-500";
+
+    return "border-gray-400";
+}
+
+const profileBtn = document.getElementById("profileBtn");
+const dropdown = document.getElementById("profileDropdown");
+
+profileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("hidden");
+});
+
+document.addEventListener("click", () => {
+    dropdown.classList.add("hidden");
+});
+
+profileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("show");
+});
+
+document.addEventListener("click", () => {
+    dropdown.classList.remove("show");
+});
+
 if (window.location.pathname.includes("absen.html")) {
     loadHistory();
     loadMap();
@@ -466,6 +605,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (window.location.pathname.includes("dashboard.html")) {
         await initHeader();
         await checkTodayAttendance();
+        await checkRole();
         loadMap();
         startLiveLocation();
         loadHistory();

@@ -101,24 +101,30 @@ async function loadAttendance() {
     const container = document.getElementById("attendanceList");
     container.innerHTML = "";
 
-    data.forEach(item => {
-        console.log("userid:", item.userid);
-        const { data: profile, error } = supabaseClient
-            .from("profiles")
-            .select("name")
-            .eq("id", item.userid)
-            .single();
+    for (const item of data) {
+        const displayName = await getUserProfiles(item.userid); 
 
-        console.log("Profiles : ", profile);    
-        let displayName = "";
-        if (profile && profile.name) {
-            displayName = profile.name;
-        }
+        const tanggal = new Date(item.timestamp).toLocaleString();
 
         container.innerHTML += `
             <div>
-                ${displayName} - ${item.status} - ${item.timestamp}
+                ${displayName} - ${item.status} - ${tanggal}
             </div>
         `;
-    });
+    }
+}
+
+async function getUserProfiles(userid) {
+    const { data: profile, error } = await supabaseClient
+            .from("profiles")
+            .select("name")
+            .eq("id", userid)
+            .single();
+    
+    console.log("Profiles : ", profile);   
+    console.log("Error : ", error);  
+    if (profile && profile.name) {
+        return profile.name;
+    }
+    else return "Unknown"
 }

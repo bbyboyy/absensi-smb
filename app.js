@@ -1,7 +1,8 @@
-const SUPABASE_URL = "https://tetmchfwcwtsirdghxwo.supabase.co";
-const SUPABASE_KEY = "sb_publishable_zpLeYA-F1nhVC4r4O1i_PQ_qnAvtaFi";
+// const SUPABASE_URL = "https://tetmchfwcwtsirdghxwo.supabase.co";
+// const SUPABASE_KEY = "sb_publishable_zpLeYA-F1nhVC4r4O1i_PQ_qnAvtaFi";
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// const supabaseClient = window.supabaseClient;
 
 let currentLat = null;
 let currentLng = null;
@@ -59,10 +60,10 @@ async function login() {
 
 
 // LOGOUT
-async function logout() {
-    await supabaseClient.auth.signOut();
-    window.location.href = "login.html";
-}
+// async function logout() {
+//     await supabaseClient.auth.signOut();
+//     window.location.href = "login.html";
+// }
 
 
 // NAVIGATION
@@ -75,20 +76,20 @@ function goToAdmin() {
 }
 
 // BTN LISTENER
-document.getElementById("btnAbsen")
-    .addEventListener("click", async () => {
-        await absen();
-})
+// document.getElementById("btnAbsen")
+//     .addEventListener("click", async () => {
+//         await absen();
+// })
 
 document.getElementById("btnAdmin")
     .addEventListener("click", async () => {
         await goToAdmin();
 })
 
-document.getElementById("btnLogout")
-    .addEventListener("click", async () => {
-        await logout();
-})
+// document.getElementById("btnLogout")
+//     .addEventListener("click", async () => {
+//         await logout();
+// })
 
 document.getElementById("btnIzin")
     .addEventListener("click", async () => {

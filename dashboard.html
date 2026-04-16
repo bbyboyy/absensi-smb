@@ -78,7 +78,7 @@
                     🔐 Admin Panel
                 </button>
 
-                <button id="btnLogout"
+                <button onclick="logout()" id="btnLogout"
                     class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100">
                     🚪 Logout
                 </button>
@@ -221,7 +221,17 @@
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<!-- Auth -->
+<script src="auth.js"></script>
+
 <!-- App -->
 <script src="app.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    await requireAuth();
+    listenAuth();
+});
+</script>
 </body>
 </html>

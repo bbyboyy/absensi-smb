@@ -77,8 +77,18 @@
     </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<!-- Auth -->
+<script src="auth.js"></script>
+
 <script src="app.js"></script>
 <script src="admin.js"></script>
 
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    await requireAuth();
+    listenAuth();
+});
+</script>
 </body>
 </html>

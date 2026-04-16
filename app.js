@@ -424,6 +424,77 @@ async function loadMap() {
     }
 }
 
+async function loadMyAttendance() {
+
+    const { data, error } = await supabaseClient
+        .from("attendance_user_view")
+        .select("*")
+        .order("timestamp", { ascending: false });
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    renderMyAttendance(data);
+}
+
+function renderMyAttendance(data) {
+
+    let html = "";
+
+    data.forEach(item => {
+
+        let bg = "bg-gray-50";
+        let badge = "";
+
+        if (item.status === "Hadir") {
+            bg = "bg-green-50";
+            badge = "bg-green-500";
+        }
+        else if (item.status === "Izin") {
+            bg = "bg-orange-50";
+            badge = "bg-orange-500";
+        }
+        else if (item.status === "Terlambat") {
+            bg = "bg-yellow-50";
+            badge = "bg-yellow-500";
+        }
+        
+
+        html += `
+        <div class="p-3 rounded-xl shadow-sm ${bg}">
+            
+            <div class="flex justify-between items-center">
+                <span class="px-2 py-1 text-white text-xs rounded ${badge}">
+                    ${item.status}
+                </span>
+
+                <span class="text-xs text-gray-500">
+                    ${new Date(item.timestamp).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                    })}
+                </span>
+            </div>
+
+            <div class="text-sm text-gray-700 mt-1">
+                ${new Date(item.timestamp).toLocaleTimeString()}
+            </div>
+
+            ${item.reason ? `
+                <div class="text-xs text-gray-500 mt-1">
+                    📝 ${item.reason}
+                </div>
+            ` : ""}
+        </div>
+        `;
+    });
+
+    document.getElementById("riwayatList").innerHTML = html;
+}
+
 function startLiveLocation() {
 
     if (!navigator.geolocation) {
@@ -608,7 +679,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         await checkRole();
         loadMap();
         startLiveLocation();
-        loadHistory();
+        // loadHistory();
+        loadMyAttendance();
     }
 
 });

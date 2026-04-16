@@ -26,6 +26,7 @@ async function checkAdmin() {
 checkAdmin();
 loadUsers();
 loadAttendance();
+loadAttendanceTable();
 
 
 // =================== CRUD USER ===================
@@ -127,4 +128,130 @@ async function getUserProfiles(userid) {
         return profile.name;
     }
     else return "Unknown"
+}
+
+async function loadAttendanceTable() {
+    const { data, error } = await supabaseClient
+        .from("attendance_view")
+        .select("*")
+        .order("tanggal", { ascending: true });
+
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
+
+    if (error) {
+        alert("ERROR: " + error.message);
+        return;
+    }
+
+    if (!data) {
+        alert("Data kosong");
+        return;
+    }
+
+    const dateMap = {};
+
+    data.forEach(item => {
+        const d = new Date(item.tanggal);
+        const month = getMonthName(d);
+        const day = getDay(d);
+
+        if (!dateMap[month]) {
+            dateMap[month] = new Set();
+        }
+
+        dateMap[month].add(day);
+    });
+
+    // convert ke array & sort
+    for (let m in dateMap) {
+        dateMap[m] = Array.from(dateMap[m]).sort((a, b) => a - b);
+    }
+
+    const users = {};
+
+    data.forEach(item => {
+        const name = item.name || "Unknown";
+        const d = new Date(item.tanggal);
+        const key = `${getMonthName(d)}-${getDay(d)}`;
+
+        if (!users[name]) users[name] = {};
+        users[name][key] = item.status;
+    });
+
+    //RENDER TABLE HEADER
+    let headHTML = "";
+
+    // ROW 1 (BULAN)
+    headHTML += `<tr class="bg-blue-300 text-center font-semibold">
+        <th rowspan="2" class="border p-2">No</th>
+        <th rowspan="2" class="border p-2">Nama</th>
+    `;
+
+    for (let month in dateMap) {
+        headHTML += `<th colspan="${dateMap[month].length}" class="border p-2">
+            ${month}
+        </th>`;
+    }
+
+    headHTML += `</tr>`;
+
+    // ROW 2 (TANGGAL)
+    headHTML += `<tr class="bg-blue-200 text-center">`;
+
+    for (let month in dateMap) {
+        dateMap[month].forEach(day => {
+            headHTML += `<th class="border p-2">${day}</th>`;
+        });
+    }
+
+    headHTML += `</tr>`;
+
+    document.getElementById("rekapHead").innerHTML = headHTML;
+    //END RENDER TABLE HEADER
+
+    //RENDER TABLE BODY
+    let bodyHTML = "";
+    let no = 1;
+
+    for (const name in users) {
+
+        bodyHTML += `<tr class="text-center">
+            <td class="border p-2">${no++}</td>
+            <td class="border p-2 text-left font-medium">${name}</td>
+        `;
+
+        for (let month in dateMap) {
+            dateMap[month].forEach(day => {
+
+                const key = `${month}-${day}`;
+                const status = users[name][key] || "";
+
+                let color = "";
+
+                if (status === "Hadir") color = "bg-green-200";
+                else if (status === "Izin") color = "bg-orange-200";
+                else if (status === "Terlambat") color = "bg-yellow-200";
+
+                bodyHTML += `
+                    <td class="border p-2 ${color}">
+                        ${status}
+                    </td>
+                `;
+            });
+        }
+
+        bodyHTML += `</tr>`;
+    }
+
+    document.getElementById("rekapBody").innerHTML = bodyHTML;
+    //END RENDER TABLE BODY
+}
+
+function getMonthName(date) {
+    return date.toLocaleString("id-ID", { month: "long" });
+}
+
+function getDay(date) {
+    return date.getDate();
 }

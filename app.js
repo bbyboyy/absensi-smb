@@ -3,9 +3,13 @@ const SUPABASE_KEY = "sb_publishable_zpLeYA-F1nhVC4r4O1i_PQ_qnAvtaFi";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let currentLat = null;
+let currentLng = null;
+let currentAccuracy = null;
+
 const ABSEN_START = 6;   // buka jam 06:00
 const LATE_START = 10;   // terlambat mulai 10:00
-const ABSEN_END = 12;    // tutup jam 12:00
+const ABSEN_END = 18;    // tutup jam 12:00
 
 // REGISTER SERVICE WORKER
 if ('serviceWorker' in navigator) {
@@ -150,17 +154,19 @@ async function checkTodayAttendance() {
     btnAbsen.disabled = true;
 
     // Kalau bukan Minggu
-    if (day !== 0) {
-        statusElement.innerHTML = "⛔ Bukan Hari Absensi";
-        statusElement.style.color = "gray";
-        btnAbsen.innerText = "ABSEN TIDAK TERSEDIA";
-        return;
-    }
+    // if (day !== 0) {
+    //     statusElement.innerHTML = "⛔ Bukan Hari Absensi";
+    //     statusElement.style.color = "gray";
+    //     btnAbsen.innerText = "ABSEN TIDAK TERSEDIA";
+    //     return;
+    // }
 
     if (hour < ABSEN_START) {
         statusElement.innerHTML = "⏳ Absensi dibuka pukul 06:00";
         statusElement.style.color = "orange";
         btnAbsen.innerText = "BELUM WAKTU";
+        btnAbsen.classList.remove("bg-green-500", "hover:bg-green-600");
+        btnAbsen.classList.add("bg-gray-400", "hover:bg-gray-500");
         return;
     }
 
@@ -168,6 +174,8 @@ async function checkTodayAttendance() {
         statusElement.innerHTML = "⌛ Absensi sudah ditutup (12:00)";
         statusElement.style.color = "red";
         btnAbsen.innerText = "ABSEN DITUTUP";
+        btnAbsen.classList.remove("bg-green-500", "hover:bg-green-600");
+        btnAbsen.classList.add("bg-gray-400", "hover:bg-gray-500");
         return;
     }
 
@@ -197,6 +205,15 @@ async function checkTodayAttendance() {
         btnAbsen.innerText = "ABSEN HADIR";
         btnAbsen.disabled = false;
     }
+
+    if (btnAbsen.disabled) {
+        btnAbsen.classList.remove("bg-green-500", "hover:bg-green-600");
+        btnAbsen.classList.add("bg-gray-400", "hover:bg-gray-500");
+    }
+    else {
+        btnAbsen.classList.remove("bg-gray-400", "hover:bg-gray-500");
+        btnAbsen.classList.add("bg-green-500", "hover:bg-green-600");
+    }
 }
 
 const OFFICE_LAT = -6.262410;
@@ -204,65 +221,149 @@ const OFFICE_LNG = 106.589714;
 const MAX_RADIUS = 20; // meter
 
 // ABSEN
+// async function absen() {
+//     // alert("Absen Clicked");
+//     const statusText = document.getElementById("status");
+
+//     if (!navigator.geolocation) {
+//         alert("GPS tidak didukung");
+//         return;
+//     }
+
+//     navigator.geolocation.getCurrentPosition(async (position) => {
+
+//         const lat = position.coords.latitude;
+//         const lng = position.coords.longitude;
+        
+//         console.log("OFFICE:", OFFICE_LAT, OFFICE_LNG);
+//         console.log("USER:", lat, lng);
+
+//         // statusText.innerText = `Lokasi: ${lat}, ${lng}`;
+
+//         const user = await supabaseClient.auth.getUser();
+
+//         if (!user.data.user) {
+//             alert("User tidak valid");
+//             return;
+//         }
+
+//         // VALIDASI JAM
+//         const hour = new Date().getHours();
+//         let status = "Hadir";
+//         if (hour >= LATE_START) {
+//             status = "Terlambat";
+//         }
+
+//         const jarak = hitungJarak(lat, lng, OFFICE_LAT, OFFICE_LNG);
+
+//         if (jarak > MAX_RADIUS) {
+//             alert("Di luar area absen");
+//             return;
+//         }
+
+//         // INSERT DB
+//         const { error } = await supabaseClient
+//             .from('attendance')
+//             .insert([
+//                 {
+//                     userid: user.data.user.id,
+//                     latitude: lat,
+//                     longitude: lng,
+//                     status: status
+//                 }
+//             ]);
+
+//         if (error) {
+//             alert("Gagal absen");
+//             console.log(error);
+//             return;
+//         }
+
+//         alert("Absen berhasil (" + status + ")");
+//         await checkTodayAttendance();
+
+//     });
+// }
+
 async function absen() {
-    alert("Absen Clicked");
-    const statusText = document.getElementById("status");
 
-    if (!navigator.geolocation) {
-        alert("GPS tidak didukung");
-        return;
-    }
+    try {
 
-    navigator.geolocation.getCurrentPosition(async (position) => {
+        setLoading(true, "📍 Getting Location...");
 
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
+        // const position = await getLocation();
+        // const position = await getLocationSmart();
 
-        statusText.innerText = `Lokasi: ${lat}, ${lng}`;
-
-        const user = await supabaseClient.auth.getUser();
-
-        if (!user.data.user) {
-            alert("User tidak valid");
+        if (!currentLat || !currentLng) {
+            alert("Location not available, please wait a moment...");
             return;
         }
 
-        // VALIDASI JAM
-        const hour = new Date().getHours();
-        let status = "Hadir";
-        if (hour >= LATE_START) {
-            status = "Terlambat";
-        }
+        const lat = currentLat;
+        const lng = currentLng;
+
+        setLoading(true, "📏 Calculating Distance...");
 
         const jarak = hitungJarak(lat, lng, OFFICE_LAT, OFFICE_LNG);
 
         if (jarak > MAX_RADIUS) {
-            alert("Di luar area absen");
-            return;
+            throw new Error("Di luar area absen");
         }
 
-        // INSERT DB
+        setLoading(true, "📡 Validating User...");
+
+        const { data } = await supabaseClient.auth.getUser();
+
+        if (!data.user) throw new Error("User tidak valid");
+
+        setLoading(true, "📡 Sending Data...");
+        const hour = new Date().getHours();
+        let status = hour >= LATE_START ? "Terlambat" : "Hadir";
+
         const { error } = await supabaseClient
             .from('attendance')
-            .insert([
-                {
-                    userid: user.data.user.id,
-                    latitude: lat,
-                    longitude: lng,
-                    status: status
-                }
-            ]);
+            .insert([{
+                userid: data.user.id,
+                latitude: lat,
+                longitude: lng,
+                status: status
+            }]);
 
-        if (error) {
-            alert("Gagal absen");
-            console.log(error);
-            return;
-        }
+        if (error) throw error;
 
         alert("Absen berhasil (" + status + ")");
-        await checkTodayAttendance();
 
-    });
+        await checkTodayAttendance();
+        loadMyAttendance();
+        loadMySummary();
+    } catch (err) {
+
+        console.error(err);
+        alert(err.message || err);
+
+    } finally {
+        setLoading(false);
+    }
+}
+
+function setLoading(isLoading, text = "⏳ Memproses...") {
+
+    const btn = document.getElementById("btnAbsen");
+
+    if (isLoading) {
+        btn.disabled = true;
+        btn.innerText = text;
+        btn.classList.add("opacity-70", "cursor-not-allowed");
+
+        document.body.classList.add("cursor-wait");
+    } else {
+        // btn.disabled = false;
+        // btn.innerText = "Absen Sekarang";
+        checkTodayAttendance();
+        btn.classList.remove("opacity-70", "cursor-not-allowed");
+
+        document.body.classList.remove("cursor-wait");
+    }
 }
 
 // IZIN
@@ -425,6 +526,12 @@ async function loadMap() {
 }
 
 async function loadMyAttendance() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+        alert("User tidak login");
+        return;
+    }
 
     const { data, error } = await supabaseClient
         .from("attendance_user_view")
@@ -437,6 +544,7 @@ async function loadMyAttendance() {
     }
 
     renderMyAttendance(data);
+    initScrollShadow();
 }
 
 function renderMyAttendance(data) {
@@ -460,7 +568,7 @@ function renderMyAttendance(data) {
             bg = "bg-yellow-50";
             badge = "bg-yellow-500";
         }
-        
+
 
         html += `
         <div class="p-3 rounded-xl shadow-sm ${bg}">
@@ -495,6 +603,76 @@ function renderMyAttendance(data) {
     document.getElementById("riwayatList").innerHTML = html;
 }
 
+async function loadMySummary() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+        alert("User tidak login");
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from("attendance_user_view")
+        .select("status");
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    renderSummary(data);
+}
+
+function renderSummary(data) {
+
+    let hadir = 0;
+    let izin = 0;
+    let terlambat = 0;
+
+    data.forEach(item => {
+        if (item.status === "Hadir") hadir++;
+        else if (item.status === "Izin") izin++;
+        else if (item.status === "Terlambat") terlambat++;
+    });
+
+    document.getElementById("totalHadir").innerText = hadir;
+    document.getElementById("totalIzin").innerText = izin;
+    document.getElementById("totalTelat").innerText = terlambat;
+}
+
+function initScrollShadow() {
+
+    const list = document.getElementById("riwayatList");
+    const topShadow = document.getElementById("topShadow");
+    const bottomShadow = document.getElementById("bottomShadow");
+
+    function updateShadow() {
+
+        const scrollTop = list.scrollTop;
+        const scrollHeight = list.scrollHeight;
+        const clientHeight = list.clientHeight;
+
+        // TOP shadow
+        if (scrollTop > 5) {
+            topShadow.style.opacity = "1";
+        } else {
+            topShadow.style.opacity = "0";
+        }
+
+        // BOTTOM shadow
+        if (scrollTop + clientHeight < scrollHeight - 5) {
+            bottomShadow.style.opacity = "1";
+        } else {
+            bottomShadow.style.opacity = "0";
+        }
+    }
+
+    list.addEventListener("scroll", updateShadow);
+
+    // trigger awal
+    updateShadow();
+}
+
 function startLiveLocation() {
 
     if (!navigator.geolocation) {
@@ -523,6 +701,11 @@ function startLiveLocation() {
             const accuracy = position.coords.accuracy;
             let statusText = "";
             let statusColor = "";
+
+            //SET GLOBAL VARIABLE
+            currentLat = lat;
+            currentLng = lng;
+            currentAccuracy = accuracy;
 
             // if (distance <= MAX_RADIUS) {
             //     info.innerHTML = `✅ Dalam radius kantor (${distance.toFixed(1)} meter)`;
@@ -681,6 +864,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         startLiveLocation();
         // loadHistory();
         loadMyAttendance();
+        loadMySummary();
     }
 
 });

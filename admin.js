@@ -50,8 +50,8 @@ async function createUser() {
         const token = data.session.access_token;
 
         setLoading("btnAddUser",true, "Sending Data...");
-        // const res = await fetch("https://backend-absensi-0hkl.onrender.com/create-user", {
-        const res = await fetch("http://localhost:3000/create-user", {
+        const res = await fetch("https://backend-absensi-0hkl.onrender.com/create-user", {
+        // const res = await fetch("http://localhost:3000/create-user", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -182,8 +182,8 @@ async function deleteUser(id) {
         }
         const token = data.session.access_token;
 
-        // const res = await fetch(`https://backend-absensi-0hkl.onrender.com/delete-user/${id}`, {
-        const res = await fetch(`http://localhost:3000/delete-user/${id}`, {
+        const res = await fetch(`https://backend-absensi-0hkl.onrender.com/delete-user/${id}`, {
+        // const res = await fetch(`http://localhost:3000/delete-user/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": "Bearer " + token
@@ -390,8 +390,8 @@ async function addAttendance() {
 
         const token = data.session.access_token;
 
-        // const res = await fetch("https://backend-absensi-0hkl.onrender.com/add-attendance", {
-        const res = await fetch("http://localhost:3000/add-attendance", {
+        const res = await fetch("https://backend-absensi-0hkl.onrender.com/add-attendance", {
+        // const res = await fetch("http://localhost:3000/add-attendance", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

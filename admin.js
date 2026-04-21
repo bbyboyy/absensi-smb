@@ -113,6 +113,8 @@ async function loadUsers() {
     const container = document.getElementById("userList");
     container.innerHTML = "";
 
+    const userSelect = document.getElementById("userAttendance");
+    userSelect.innerHTML = '<option value="">Pilih User</option>';
     data.forEach(user => {
         container.innerHTML += `
             <div class="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm mb-2 hover:shadow transition">
@@ -147,7 +149,6 @@ async function loadUsers() {
         `;
 
         // add user to dropdown for attendance input
-        const userSelect = document.getElementById("userAttendance");
         if (userSelect) {
             userSelect.innerHTML += `
                 <option value="${user.id}">${user.name}</option>

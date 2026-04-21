@@ -49,7 +49,7 @@
 
             </div>
 
-            <button id="btnAddUser" onclick="createUser()"
+            <button id="btnAddUser"
                 class="mt-4 w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
                 Tambah User
             </button>
@@ -74,6 +74,34 @@
                 <tbody id="rekapBody"></tbody>
             </table>
         </div>
+
+        <!-- CARD INSERT ATTENDANCE -->
+        <div class="bg-white p-6 rounded-2xl shadow-md">
+            <h3 class="text-xl font-semibold mb-4">Add Attendance</h3>
+
+            <div class="grid md:grid-cols-2 gap-4">
+
+                <select id="userAttendance"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </select>
+
+                <select id="statusAttendance"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="Hadir">Hadir</option>
+                    <option value="Terlambat">Terlambat</option>
+                    <option value="Izin">Izin</option>
+                </select>
+
+                <input type="text" id="reasonAttendance" placeholder="Alasan (jika izin)"
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+
+            </div>
+
+            <button id="btnAddAttendance" 
+                class="mt-4 w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                Add Attendance
+            </button>
+        </div>
     </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -81,8 +109,8 @@
 <!-- Auth -->
 <script src="auth.js"></script>
 
-<script src="app.js"></script>
-<script src="admin.js"></script>
+<script type="module" src="app.js"></script>
+<script type="module" src="admin.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {

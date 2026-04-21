@@ -1,0 +1,11 @@
+export const TIME_CONFIG = {
+  ABSEN_START: 6,
+  LATE_START: 10,
+  ABSEN_END: 18
+};
+
+export const OFFICE_CONFIG = {
+  LAT: -6.262410,
+  LNG: 106.589714,
+  MAX_RADIUS: 20
+};

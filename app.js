@@ -1,16 +1,23 @@
+import { TIME_CONFIG, OFFICE_CONFIG } from "./config.js";
 // const SUPABASE_URL = "https://tetmchfwcwtsirdghxwo.supabase.co";
 // const SUPABASE_KEY = "sb_publishable_zpLeYA-F1nhVC4r4O1i_PQ_qnAvtaFi";
 
 // const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // const supabaseClient = window.supabaseClient;
+console.log("OFFICE_CONFIG:", OFFICE_CONFIG);
+console.log("TIME_CONFIG:", TIME_CONFIG);
 
 let currentLat = null;
 let currentLng = null;
 let currentAccuracy = null;
 
-const ABSEN_START = 6;   // buka jam 06:00
-const LATE_START = 10;   // terlambat mulai 10:00
-const ABSEN_END = 18;    // tutup jam 12:00
+// const ABSEN_START = 6;   // buka jam 06:00
+// const LATE_START = 10;   // terlambat mulai 10:00
+// const ABSEN_END = 18;    // tutup jam 12:00
+
+// const OFFICE_LAT = -6.262410;
+// const OFFICE_LNG = 106.589714;
+// const MAX_RADIUS = 20; // meter
 
 // REGISTER SERVICE WORKER
 if ('serviceWorker' in navigator) {
@@ -76,10 +83,10 @@ function goToAdmin() {
 }
 
 // BTN LISTENER
-// document.getElementById("btnAbsen")
-//     .addEventListener("click", async () => {
-//         await absen();
-// })
+document.getElementById("btnAbsen")
+    .addEventListener("click", async () => {
+        await absen();
+})
 
 document.getElementById("btnAdmin")
     .addEventListener("click", async () => {
@@ -162,7 +169,7 @@ async function checkTodayAttendance() {
     //     return;
     // }
 
-    if (hour < ABSEN_START) {
+    if (hour < TIME_CONFIG.ABSEN_START) {
         statusElement.innerHTML = "⏳ Absensi dibuka pukul 06:00";
         statusElement.style.color = "orange";
         btnAbsen.innerText = "BELUM WAKTU";
@@ -171,7 +178,7 @@ async function checkTodayAttendance() {
         return;
     }
 
-    if (hour >= ABSEN_END) {
+    if (hour >= TIME_CONFIG.ABSEN_END) {
         statusElement.innerHTML = "⌛ Absensi sudah ditutup (12:00)";
         statusElement.style.color = "red";
         btnAbsen.innerText = "ABSEN DITUTUP";
@@ -216,10 +223,6 @@ async function checkTodayAttendance() {
         btnAbsen.classList.add("bg-green-500", "hover:bg-green-600");
     }
 }
-
-const OFFICE_LAT = -6.262410;
-const OFFICE_LNG = 106.589714;
-const MAX_RADIUS = 20; // meter
 
 // ABSEN
 // async function absen() {
@@ -287,7 +290,7 @@ const MAX_RADIUS = 20; // meter
 // }
 
 async function absen() {
-
+    // console.log("Absen Clicked");
     try {
 
         setLoading(true, "📍 Getting Location...");
@@ -305,9 +308,9 @@ async function absen() {
 
         setLoading(true, "📏 Calculating Distance...");
 
-        const jarak = hitungJarak(lat, lng, OFFICE_LAT, OFFICE_LNG);
+        const jarak = hitungJarak(lat, lng, OFFICE_CONFIG.LAT, OFFICE_CONFIG.LNG);
 
-        if (jarak > MAX_RADIUS) {
+        if (jarak > OFFICE_CONFIG.MAX_RADIUS) {
             throw new Error("Di luar area absen");
         }
 
@@ -319,7 +322,7 @@ async function absen() {
 
         setLoading(true, "📡 Sending Data...");
         const hour = new Date().getHours();
-        let status = hour >= LATE_START ? "Terlambat" : "Hadir";
+        let status = hour >= TIME_CONFIG.LATE_START ? "Terlambat" : "Hadir";
 
         const { error } = await supabaseClient
             .from('attendance')
@@ -496,8 +499,8 @@ async function loadMap() {
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        L.circle([OFFICE_LAT, OFFICE_LNG], {
-            radius: MAX_RADIUS,
+        L.circle([OFFICE_CONFIG.LAT, OFFICE_CONFIG.LNG], {
+            radius: OFFICE_CONFIG.MAX_RADIUS,
             color: 'green',
             fillOpacity: 0.2
         }).addTo(map);  
@@ -691,8 +694,8 @@ function startLiveLocation() {
             const distance = calculateDistance(
                 lat,
                 lng,
-                OFFICE_LAT,
-                OFFICE_LNG
+                OFFICE_CONFIG.LAT,
+                OFFICE_CONFIG.LNG
             );
 
             // const info = document.getElementById("distanceInfo");
@@ -716,7 +719,7 @@ function startLiveLocation() {
             //     info.style.color = "red";
             // }
 
-            if (distance <= MAX_RADIUS) {
+            if (distance <= OFFICE_CONFIG.MAX_RADIUS) {
                 box.className = "mt-3 p-3 rounded-xl text-sm font-medium bg-green-50 text-green-700";
                 statusText = "✅ Dalam radius vihara";
             } else {

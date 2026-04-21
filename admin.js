@@ -1,3 +1,5 @@
+import { OFFICE_CONFIG, TIME_CONFIG } from "./config.js";
+
 // Cek apakah admin
 async function checkAdmin() {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -32,35 +34,54 @@ loadAttendanceTable();
 // =================== CRUD USER ===================
 
 async function createUser() {
-    setLoading(true, "Processing Data...");
-    const email = document.getElementById("newEmail").value;
-    const password = document.getElementById("newPassword").value;
-    const name = document.getElementById("newName").value;
-    const role = document.getElementById("newRole").value;
+    try {
+        setLoading("btnAddUser", true, "Processing Data...");
+        const email = document.getElementById("newEmail").value;
+        const password = document.getElementById("newPassword").value;
+        const name = document.getElementById("newName").value;
+        const role = document.getElementById("newRole").value;
 
-    setLoading(true, "Sending Data...");
-    const res = await fetch("https://backend-absensi-0hkl.onrender.com/create-user", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password, name, role })
-    });
+        const { data } = await supabaseClient.auth.getSession();
+        if (!data.session) {
+            alert("Session habis, silakan login ulang");
+            window.location.replace("login.html");
+            return;
+        }
+        const token = data.session.access_token;
 
-    const data = await res.json();
+        setLoading("btnAddUser",true, "Sending Data...");
+        // const res = await fetch("https://backend-absensi-0hkl.onrender.com/create-user", {
+        const res = await fetch("http://localhost:3000/create-user", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ email, password, name, role })
+        });
 
-    if (data.error) {
-        alert("Error: " + data.error);
-        setLoading(false);
-    } else {
-        alert("User berhasil dibuat");
-        loadUsers();
-        setLoading(false);
+        const result = await res.json();
+
+        if (result.error) {
+            alert("Error: " + result.error);
+        } else {
+            alert("User berhasil dibuat");
+            loadUsers();
+
+            window.document.getElementById("newEmail").value = "";
+            window.document.getElementById("newPassword").value = "";
+            window.document.getElementById("newName").value = "";   
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Server error / koneksi bermasalah");
+    } finally {
+        setLoading("btnAddUser",false);
     }
 }
 
-function setLoading(isLoading, text = "") {
-    const btn = document.getElementById("btnAddUser");
+function setLoading(btnId, isLoading, text = "") {
+    const btn = document.getElementById(btnId);
 
     if (isLoading) {
         btn.disabled = true;
@@ -94,36 +115,94 @@ async function loadUsers() {
 
     data.forEach(user => {
         container.innerHTML += `
-            <div>
-                ${user.name} (${user.role})
+            <div class="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm mb-2 hover:shadow transition">
                 
-                <button onclick="deleteUser('${user.id}')" class=" p-2 text-red-600 rounded-full hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-                    <svg xmlns="http://www.w3.org" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                        <path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512A48.91 48.91 0 0122.5 6.99v.234l-1.406 7.03a3 3 0 01-2.964 2.526H7.964a3 3 0 01-2.964-2.526L3.5 7.224V6.99a48.91 48.91 0 011.89-2.278 48.817 48.817 0 013.879-.512V4.478c0-1.41 1.28-2.617 2.67-2.617h1.442c1.39 0 2.67 1.207 2.67 2.617zm-6.6 9.61a.75.75 0 01-.9 1.026.75.75 0 01-1.026-.9l1.026-.9zm4.2-.9a.75.75 0 01.9-1.026.75.75 0 011.026.9l-1.026.9zM12 4.5v.001h-.001V4.5H12z" clip-rule="evenodd" />
+                <!-- LEFT -->
+                <div>
+                    <p class="font-medium text-gray-800">
+                        ${user.name}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        ${user.role}
+                    </p>
+                </div>
+
+                <!-- RIGHT -->
+                <button
+                    class="btn-delete flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition"
+                        
+                        data-id="${user.id}">
+                    
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                        fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
+                        stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" 
+                            d="M6 7.5h12M9 7.5v9m6-9v9M4.5 7.5h15m-13.5 0L6.75 5.25A1.5 1.5 0 018.25 4h7.5a1.5 1.5 0 011.5 1.25L18 7.5"/>
                     </svg>
+
+                    <span>Delete</span>
                 </button>
+
             </div>
         `;
+
+        // add user to dropdown for attendance input
+        const userSelect = document.getElementById("userAttendance");
+        if (userSelect) {
+            userSelect.innerHTML += `
+                <option value="${user.id}">${user.name}</option>
+            `;
+        }
     });
+
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const userId = e.currentTarget.dataset.id;
+        // deleteUser(userId);
+        console.log("Delete user with ID:", userId);
+        if (confirm("Yakin hapus user ini?")) {
+            deleteUser(userId);
+        }
+    });
+});
 }
 
 
 async function deleteUser(id) {
     console.log("Delete user with ID:", id);
-    if (!confirm("Yakin hapus user ini?")) return;
+    if (!confirm("Jika User dihapus, maka data absensi juga akan hilang. Yakin?")) return;
 
-    const res = await fetch(`https://backend-absensi-0hkl.onrender.com/delete-user/${id}`, {
-        method: "DELETE"
-    });
+    try {
 
-    const data = await res.json();
+        const { data } = await supabaseClient.auth.getSession();
+        if (!data.session) {
+            alert("Session habis, login ulang");
+            window.location.replace("login.html");
+            return;
+        }
+        const token = data.session.access_token;
 
-    if (data.error) {
-        alert("Error: " + data.error);
-    } else {
-        alert("User berhasil dihapus");
-        loadUsers(); // refresh list
-    }
+        // const res = await fetch(`https://backend-absensi-0hkl.onrender.com/delete-user/${id}`, {
+        const res = await fetch(`http://localhost:3000/delete-user/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        const result = await res.json();
+
+        if (result.error) {
+            alert("Error: " + result.error);
+        } else {
+            alert("User berhasil dihapus");
+            loadUsers(); // refresh list
+            loadAttendanceTable(); // refresh attendance table in case there are records related to this user
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Server error / koneksi bermasalah");
+    } 
 }
 
 
@@ -284,6 +363,67 @@ async function loadAttendanceTable() {
     //END RENDER TABLE BODY
 }
 
+async function addAttendance() {
+    const userId = document.getElementById("userAttendance").value;
+    const status = document.getElementById("statusAttendance").value;
+    const reason = document.getElementById("reasonAttendance").value.trim();
+
+    if (!userId || !status) {
+        alert("User dan status wajib diisi");
+        return;
+    }
+
+    if (status === "Izin" && !reason) {
+        alert("Alasan wajib diisi untuk status Izin");
+        return;
+    }
+
+    setLoading("btnAddAttendance", true, "Processing Data...");
+
+    try {
+        const { data } = await supabaseClient.auth.getSession();
+
+        if (!data.session) {
+            alert("Session habis");
+            return;
+        }
+
+        const token = data.session.access_token;
+
+        // const res = await fetch("https://backend-absensi-0hkl.onrender.com/add-attendance", {
+        const res = await fetch("http://localhost:3000/add-attendance", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({
+                userid: userId,
+                latitude: OFFICE_CONFIG.LAT,
+                longitude: OFFICE_CONFIG.LNG,
+                status: status,
+                reason: reason
+            })
+        });
+
+        const result = await res.json();
+
+        if (result.error) {
+            alert(result.error);
+        } else {
+            alert("Absen berhasil");
+            loadAttendanceTable();
+            document.getElementById("reasonAttendance").value = "";
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
+    } finally {
+        setLoading("btnAddAttendance", false);
+    }
+}
+
 function getMonthName(date) {
     return date.toLocaleString("id-ID", { month: "long" });
 }
@@ -291,3 +431,11 @@ function getMonthName(date) {
 function getDay(date) {
     return date.getDate();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnAddAttendance = document.getElementById('btnAddAttendance');
+    btnAddAttendance.addEventListener('click', addAttendance);
+
+    const btnCreateUser = document.getElementById('btnAddUser');
+    btnCreateUser.addEventListener('click', createUser);
+});

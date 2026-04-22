@@ -48,6 +48,7 @@ async function checkRole() {
 
 // LOGIN
 async function login() {
+    console.log("Login Clicked");
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
@@ -83,6 +84,11 @@ function goToAdmin() {
 }
 
 // BTN LISTENER
+document.getElementById("btnLogin")
+    .addEventListener("click", 
+        login);
+
+
 document.getElementById("btnAbsen")
     .addEventListener("click", async () => {
         await absen();
@@ -105,7 +111,7 @@ document.getElementById("btnIzin")
 
 // INIT HEADER
 async function initHeader() {
-
+    console.log("initHeader called");
     const { data: { user } } = await supabaseClient.auth.getUser();
 
     if (!user) {
@@ -870,5 +876,4 @@ document.addEventListener("DOMContentLoaded", async () => {
         loadMyAttendance();
         loadMySummary();
     }
-
 });

@@ -6,6 +6,11 @@ window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log("auth loaded");
 
+document.getElementById("btnLogout")
+    .addEventListener("click", async () => {
+        await logout();
+});
+
 // 🔐 cek login
 window.requireAuth = async function () {
     const { data } = await supabaseClient.auth.getSession();

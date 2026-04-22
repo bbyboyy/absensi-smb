@@ -13,6 +13,7 @@ document.getElementById("btnLogout")
 
 // 🔐 cek login
 window.requireAuth = async function () {
+    console.log("requireAuth called");
     const { data } = await supabaseClient.auth.getSession();
 
     if (!data.session) {

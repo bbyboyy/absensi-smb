@@ -84,30 +84,45 @@ function goToAdmin() {
 }
 
 // BTN LISTENER
-document.getElementById("btnLogin")
-    .addEventListener("click", 
-        login);
+const btnLogin = document.getElementById("btnLogin");
+if (btnLogin) {
+    btnLogin.addEventListener("click", login);
+}
 
+const btnAbsen = document.getElementById("btnAbsen");
+if (btnAbsen) {
+    btnAbsen.addEventListener("click", absen);
+}
 
-document.getElementById("btnAbsen")
-    .addEventListener("click", async () => {
-        await absen();
-})
+const btnAdmin = document.getElementById("btnAdmin");
+if (btnAdmin) {
+    btnAdmin.addEventListener("click", goToAdmin);
+}
 
-document.getElementById("btnAdmin")
-    .addEventListener("click", async () => {
-        await goToAdmin();
-})
+const btnIzin = document.getElementById("btnIzin");
+if (btnIzin) {
+    btnIzin.addEventListener("click", kirimIzin);
+}
+
+// document.getElementById("btnAbsen")
+//     .addEventListener("click", async () => {
+//         await absen();
+// })
+
+// document.getElementById("btnAdmin")
+//     .addEventListener("click", async () => {
+//         await goToAdmin();
+// })
 
 // document.getElementById("btnLogout")
 //     .addEventListener("click", async () => {
 //         await logout();
 // })
 
-document.getElementById("btnIzin")
-    .addEventListener("click", async () => {
-        await kirimIzin();
-})
+// document.getElementById("btnIzin")
+//     .addEventListener("click", async () => {
+//         await kirimIzin();
+// })
 
 // INIT HEADER
 async function initHeader() {
@@ -864,16 +879,35 @@ if (window.location.pathname.includes("absen.html")) {
     });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+// document.addEventListener("DOMContentLoaded", async () => {
 
-    if (window.location.pathname.includes("dashboard.html")) {
-        await initHeader();
-        await checkTodayAttendance();
-        await checkRole();
-        loadMap();
-        startLiveLocation();
-        // loadHistory();
-        loadMyAttendance();
-        loadMySummary();
+//     if (window.location.pathname.includes("dashboard.html")) {
+//         await initHeader();
+//         await checkTodayAttendance();
+//         await checkRole();
+//         loadMap();
+//         startLiveLocation();
+//         // loadHistory();
+//         loadMyAttendance();
+//         loadMySummary();
+//     }
+// });
+
+window.addEventListener("load", async () => {
+    const path = window.location.pathname;
+
+    if (path.includes("dashboard.html")) {
+        try {
+            await initHeader();
+            await checkTodayAttendance();
+            await checkRole();
+            loadMap();
+            startLiveLocation();
+            loadMyAttendance();
+            loadMySummary();
+        } catch (err) {
+            console.error(err);
+            alert("Error: " + (err.message || err));
+        }
     }
 });

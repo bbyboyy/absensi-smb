@@ -425,6 +425,26 @@ async function addAttendance() {
     }
 }
 
+async function exportRekap() {
+    const { data } = await supabaseClient.auth.getSession();
+    const token = data.session.access_token;
+
+    const res = await fetch("https://backend-absensi-0hkl.onrender.com/export-attendance-rekap", {
+    // const res = await fetch("http://localhost:3000/export-attendance-rekap", {
+        headers: {
+            Authorization: "Bearer " + token
+        }
+    });
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "rekap-absensi.xlsx";
+    a.click();
+}
+
 function getMonthName(date) {
     return date.toLocaleString("id-ID", { month: "long" });
 }
@@ -439,4 +459,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const btnCreateUser = document.getElementById('btnAddUser');
     btnCreateUser.addEventListener('click', createUser);
+
+    const btnExportExcel = document.getElementById('btnExportExcel');
+    if (btnExportExcel) {
+        btnExportExcel.addEventListener('click', exportRekap);
+    }
 });

@@ -76,7 +76,7 @@ async function createUser() {
         console.error(err);
         alert("Server error / koneksi bermasalah");
     } finally {
-        setLoading("btnAddUser",false);
+        setLoading("btnAddUser",false, "Add User");
     }
 }
 
@@ -94,7 +94,7 @@ function setLoading(btnId, isLoading, text = "") {
         document.body.classList.add("cursor-wait");
     } else {
         btn.disabled = false;
-        btn.innerText = "Tambah User";
+        btn.innerText = text;
         btn.classList.remove("opacity-70", "cursor-not-allowed");
 
         btn.classList.remove("bg-gray-400", "hover:bg-gray-500");
@@ -421,14 +421,20 @@ async function addAttendance() {
         console.error(err);
         alert("Server error");
     } finally {
-        setLoading("btnAddAttendance", false);
+        setLoading("btnAddAttendance", false, "Add Attendance");
     }
 }
 
 async function exportRekap() {
     const { data } = await supabaseClient.auth.getSession();
+    if (!data.session) {
+        alert("Session habis, silakan login ulang");
+        window.location.replace("login.html");
+        return;
+    }
     const token = data.session.access_token;
 
+    setLoading("btnExportExcel", true, "Exporting...");
     const res = await fetch("https://backend-absensi-0hkl.onrender.com/export-attendance-rekap", {
     // const res = await fetch("http://localhost:3000/export-attendance-rekap", {
         headers: {
@@ -443,6 +449,7 @@ async function exportRekap() {
     a.href = url;
     a.download = "rekap-absensi.xlsx";
     a.click();
+    setLoading("btnExportExcel", false, "Export Excel");
 }
 
 function getMonthName(date) {

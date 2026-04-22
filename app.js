@@ -4,6 +4,7 @@ import { TIME_CONFIG, OFFICE_CONFIG } from "./config.js";
 
 // const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // const supabaseClient = window.supabaseClient;
+const VAPID_PUBLIC_KEY = "BCHuq5vOKK4XuEGmRc_zRR2NK4upygWqJ2llXgg913hgP12CeB75hMh5TUEA3fwhbxlkdPZsKA2o3BjUr7f5F74";
 console.log("OFFICE_CONFIG:", OFFICE_CONFIG);
 console.log("TIME_CONFIG:", TIME_CONFIG);
 
@@ -848,6 +849,110 @@ function getStatusColor(status) {
     return "border-gray-400";
 }
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+async function subscribePush() {
+  console.log("Subscribing to push notifications...");
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") return;
+
+  const reg = await navigator.serviceWorker.register("/service-worker.js");
+
+  let sub = await reg.pushManager.getSubscription();
+
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+  }
+
+  const { data } = await supabaseClient.auth.getUser();
+
+  await supabaseClient.from("push_subscriptions").upsert({
+    user_id: data.user.id,
+    endpoint: sub.endpoint,
+    p256dh: sub.toJSON().keys.p256dh,
+    auth: sub.toJSON().keys.auth,
+    is_active: true
+  }, {
+    onConflict: "endpoint"
+  });
+}
+
+// Toggle Notification Subscription
+const toggle = document.getElementById("notifToggle");
+const circle = document.getElementById("notifCircle");
+
+let notifOn = false;
+if (toggle) {
+  toggle.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    notifOn = !notifOn;
+
+    // UI update
+    if (notifOn) {
+      toggle.classList.remove("bg-gray-300");
+      toggle.classList.add("bg-green-500");
+
+      circle.classList.remove("translate-x-1");
+      circle.classList.add("translate-x-6");
+    } else {
+      toggle.classList.remove("bg-green-500");
+      toggle.classList.add("bg-gray-300");
+
+      circle.classList.remove("translate-x-6");
+      circle.classList.add("translate-x-1");
+    }
+
+    // save ke DB
+    const { data } = await supabaseClient.auth.getUser();
+
+    await supabaseClient
+      .from("push_subscriptions")
+      .update({ is_active: notifOn })
+      .eq("user_id", data.user.id);
+
+    // auto subscribe kalau ON
+    if (notifOn) {
+      await subscribePush();
+    }
+  });
+}
+
+async function loadNotifState() {
+  const { data } = await supabaseClient.auth.getUser();
+
+  const { data: sub } = await supabaseClient
+    .from("push_subscriptions")
+    .select("is_active")
+    .eq("user_id", data.user.id)
+    .limit(1);
+
+  if (!sub || sub.length === 0) return;
+
+  const isOn = sub[0].is_active;
+
+  const toggle = document.getElementById("notifToggle");
+  const circle = document.getElementById("notifCircle");
+
+  if (isOn) {
+    toggle.classList.add("bg-green-500");
+    toggle.classList.remove("bg-gray-300");
+
+    circle.classList.add("translate-x-6");
+    circle.classList.remove("translate-x-1");
+  }
+}
+
 const profileBtn = document.getElementById("profileBtn");
 const dropdown = document.getElementById("profileDropdown");
 
@@ -901,6 +1006,7 @@ window.addEventListener("load", async () => {
             await initHeader();
             await checkTodayAttendance();
             await checkRole();
+            await loadNotifState();
             loadMap();
             startLiveLocation();
             loadMyAttendance();

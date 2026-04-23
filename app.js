@@ -971,19 +971,64 @@ if (toggle) {
   });
 }
 
+function debugLog(msg) {
+  console.log(msg);
+  alert(msg);
+}
+
 async function loadNotifState() {
+  debugLog("🔵 loadNotifState start");
+
   const { data } = await supabaseClient.auth.getUser();
-  if (!data.user) return;
 
-  const reg = await navigator.serviceWorker.ready;
-  const sub = await reg.pushManager.getSubscription();
+  if (!data.user) {
+    debugLog("❌ User tidak ditemukan");
+    return;
+  }
 
-  if (!sub) {
-    console.log("Belum ada subscription di device ini");
+  debugLog("✅ User OK: " + data.user.id);
+
+  // cek service worker
+  if (!('serviceWorker' in navigator)) {
+    debugLog("❌ Service Worker tidak support");
     setToggle(false);
     return;
   }
 
+  debugLog("✅ Service Worker supported");
+
+  const reg = await navigator.serviceWorker.ready;
+  debugLog("✅ Service Worker ready");
+
+  // cek pushManager
+  if (!reg.pushManager) {
+    debugLog("❌ PushManager tidak tersedia (iOS belum support / belum PWA)");
+    setToggle(false);
+    return;
+  }
+
+  debugLog("✅ PushManager tersedia");
+
+  let sub = null;
+
+  try {
+    sub = await reg.pushManager.getSubscription();
+    debugLog("📡 getSubscription result: " + (sub ? "ADA" : "NULL"));
+  } catch (err) {
+    debugLog("❌ Error getSubscription: " + err.message);
+    setToggle(false);
+    return;
+  }
+
+  if (!sub) {
+    debugLog("⚠️ Belum ada subscription di device ini");
+    setToggle(false);
+    return;
+  }
+
+  debugLog("✅ Endpoint: " + sub.endpoint);
+
+  // query DB
   const { data: dbSub, error } = await supabaseClient
     .from("push_subscriptions")
     .select("is_active")
@@ -991,13 +1036,23 @@ async function loadNotifState() {
     .eq("user_id", data.user.id)
     .single();
 
-  if (error || !dbSub) {
-    console.log("Subscription tidak ditemukan di DB");
+  if (error) {
+    debugLog("❌ DB Error: " + error.message);
     setToggle(false);
     return;
   }
 
+  if (!dbSub) {
+    debugLog("⚠️ Tidak ditemukan di DB");
+    setToggle(false);
+    return;
+  }
+
+  debugLog("✅ DB is_active: " + dbSub.is_active);
+
   setToggle(dbSub.is_active);
+
+  debugLog("🟢 Toggle updated");
 }
 
 function setToggle(isOn) {

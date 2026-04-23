@@ -964,6 +964,7 @@ async function loadNotifState() {
   const { data: sub } = await supabaseClient
     .from("push_subscriptions")
     .select("is_active")
+    .eq("endpoint", sub.endpoint)
     .eq("user_id", data.user.id)
     .limit(1);
 

@@ -861,12 +861,16 @@ function urlBase64ToUint8Array(base64String) {
 
 async function subscribePush() {
   console.log("Subscribing to push notifications...");
+  alert("Start subscribe");
+
   const permission = await Notification.requestPermission();
+  alert("Permission: " + permission);
   if (permission !== "granted") return;
 
   const reg = await navigator.serviceWorker.register("/service-worker.js");
 
   let sub = await reg.pushManager.getSubscription();
+  alert("Existing subscription: " + (sub ? "Found" : "Not found"));
 
   if (!sub) {
     sub = await reg.pushManager.subscribe({

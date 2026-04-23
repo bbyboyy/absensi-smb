@@ -25,6 +25,8 @@ let currentAccuracy = null;
 //     navigator.serviceWorker.register('/service-worker.js');
 // }
 
+// REGISTER SERVICE WORKER
+
 if ('serviceWorker' in navigator) {
 //   navigator.serviceWorker.register('/service-worker.js')
     navigator.serviceWorker.register('/absensi-smb/service-worker.js')

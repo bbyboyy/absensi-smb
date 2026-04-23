@@ -873,19 +873,26 @@ async function subscribePush() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
+
+    alert("Berhasil subscribe untuk push notification!");
   }
 
   const { data } = await supabaseClient.auth.getUser();
 
-  await supabaseClient.from("push_subscriptions").upsert({
+  const { error } = await supabaseClient.from("push_subscriptions").upsert({
     user_id: data.user.id,
     endpoint: sub.endpoint,
     p256dh: sub.toJSON().keys.p256dh,
     auth: sub.toJSON().keys.auth,
     is_active: true
   }, {
-    onConflict: "endpoint"
+    onConflict: "endpoint,user_id"
   });
+
+  if (error) {
+    console.error("Failed to upsert subscription:", error);
+    alert("Gagal menyimpan subscription: " + error.message);
+  }
 }
 
 // Toggle Notification Subscription
@@ -905,26 +912,49 @@ if (toggle) {
 
       circle.classList.remove("translate-x-1");
       circle.classList.add("translate-x-6");
+
+      // subscribe ke push
+      await subscribePush();
+
     } else {
       toggle.classList.remove("bg-green-500");
       toggle.classList.add("bg-gray-300");
 
       circle.classList.remove("translate-x-6");
       circle.classList.add("translate-x-1");
+
+      // ❗ update hanya device ini
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      const { data } = await supabaseClient.auth.getUser();
+
+      if (sub) {
+        const { error } = await supabaseClient
+          .from("push_subscriptions")
+          .update({ is_active: false })
+          .eq("endpoint", sub.endpoint)
+          .eq("user_id", data.user.id);
+
+        if (error) {
+          console.error("Failed to update subscription:", error);
+          alert("Gagal update subscription: " + error.message);
+        }
+      }
     }
 
     // save ke DB
-    const { data } = await supabaseClient.auth.getUser();
+    // const { data } = await supabaseClient.auth.getUser();
 
-    await supabaseClient
-      .from("push_subscriptions")
-      .update({ is_active: notifOn })
-      .eq("user_id", data.user.id);
+    // await supabaseClient
+    //   .from("push_subscriptions")
+    //   .update({ is_active: notifOn })
+    //   .eq("endpoint", sub.endpoint)
+    //   .eq("user_id", data.user.id);
 
-    // auto subscribe kalau ON
-    if (notifOn) {
-      await subscribePush();
-    }
+    // // auto subscribe kalau ON
+    // if (notifOn) {
+    //   await subscribePush();
+    // }
   });
 }
 

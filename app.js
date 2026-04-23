@@ -1131,7 +1131,7 @@ window.addEventListener("load", async () => {
             await initHeader();
             await checkTodayAttendance();
             await checkRole();
-            await loadNotifState();
+            // await loadNotifState();
             loadMap();
             startLiveLocation();
             loadMyAttendance();

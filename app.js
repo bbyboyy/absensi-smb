@@ -26,7 +26,8 @@ let currentAccuracy = null;
 // }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js')
+//   navigator.serviceWorker.register('/service-worker.js')
+    navigator.serviceWorker.register('/absensi-smb/service-worker.js')
     .then(reg => {
       debugLog("✅ SW Registered");
       console.log("SW Registered", reg);

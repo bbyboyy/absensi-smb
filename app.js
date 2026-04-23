@@ -870,15 +870,24 @@ async function subscribePush() {
   const reg = await navigator.serviceWorker.register("/service-worker.js");
 
   let sub = await reg.pushManager.getSubscription();
-  alert("Existing subscription: " + (sub ? "Found" : "Not found"));
 
   if (!sub) {
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
+    try {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
 
-    alert("Berhasil subscribe untuk push notification!");
+      alert("Berhasil subscribe!");
+    } catch (err) {
+      alert("Subscribe error: " + err.message);
+      return;
+    }
+  }
+
+  if (!sub) {
+    alert("Subscription gagal dibuat");
+    return;
   }
 
   const { data } = await supabaseClient.auth.getUser();

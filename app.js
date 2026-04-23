@@ -21,8 +21,20 @@ let currentAccuracy = null;
 // const MAX_RADIUS = 20; // meter
 
 // REGISTER SERVICE WORKER
+// if ('serviceWorker' in navigator) {
+//     navigator.serviceWorker.register('/service-worker.js');
+// }
+
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js');
+  navigator.serviceWorker.register('/service-worker.js')
+    .then(reg => {
+      debugLog("✅ SW Registered");
+      console.log("SW Registered", reg);
+    })
+    .catch(err => {
+      debugLog("❌ SW Register Error: " + err.message);
+      console.error(err);
+    });
 }
 
 // CHECK ROLE ADMIN
@@ -977,6 +989,7 @@ function debugLog(msg) {
 }
 
 async function loadNotifState() {
+  alert("Standalone: " + window.navigator.standalone);
   debugLog("🔵 loadNotifState start");
 
   const { data } = await supabaseClient.auth.getUser();
@@ -997,7 +1010,25 @@ async function loadNotifState() {
 
   debugLog("✅ Service Worker supported");
 
-  const reg = await navigator.serviceWorker.ready;
+//   const reg = await navigator.serviceWorker.ready;
+
+  let reg;
+
+  try {
+    reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("SW ready timeout")), 5000)
+        )
+    ]);
+
+    debugLog("✅ Service Worker ready");
+  } catch (err) {
+    debugLog("❌ SW READY ERROR: " + err.message);
+    setToggle(false);
+    return;
+  }  
+
   debugLog("✅ Service Worker ready");
 
   // cek pushManager

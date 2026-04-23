@@ -6,10 +6,12 @@ window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log("auth loaded");
 
-document.getElementById("btnLogout")
-    .addEventListener("click", async () => {
+const btnLogout = document.getElementById("btnLogout");
+if (btnLogout) {
+    btnLogout.addEventListener("click", async () => {
         await logout();
-});
+    });
+}
 
 // 🔐 cek login
 window.requireAuth = async function () {
@@ -49,6 +51,7 @@ window.logout = async function () {
 
 // 🔁 auto logout listener
 window.listenAuth = function () {
+    console.log("listenAuth called");
     supabaseClient.auth.onAuthStateChange((event) => {
         if (event === "SIGNED_OUT") {
             window.location.replace("login.html");

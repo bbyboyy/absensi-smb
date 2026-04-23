@@ -45,8 +45,8 @@
 <script type="module" src="app.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    redirectIfLoggedIn();
+window.addEventListener("pageshow", async () => {
+    await redirectIfLoggedIn();
 });
 </script>
 </body>

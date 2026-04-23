@@ -973,20 +973,38 @@ if (toggle) {
 
 async function loadNotifState() {
   const { data } = await supabaseClient.auth.getUser();
+  if (!data.user) return;
 
-  const { data: sub } = await supabaseClient
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+
+  if (!sub) {
+    console.log("Belum ada subscription di device ini");
+    setToggle(false);
+    return;
+  }
+
+  const { data: dbSub, error } = await supabaseClient
     .from("push_subscriptions")
     .select("is_active")
     .eq("endpoint", sub.endpoint)
     .eq("user_id", data.user.id)
-    .limit(1);
+    .single();
 
-  if (!sub || sub.length === 0) return;
+  if (error || !dbSub) {
+    console.log("Subscription tidak ditemukan di DB");
+    setToggle(false);
+    return;
+  }
 
-  const isOn = sub[0].is_active;
+  setToggle(dbSub.is_active);
+}
 
+function setToggle(isOn) {
   const toggle = document.getElementById("notifToggle");
   const circle = document.getElementById("notifCircle");
+
+  if (!toggle || !circle) return;
 
   if (isOn) {
     toggle.classList.add("bg-green-500");
@@ -994,29 +1012,37 @@ async function loadNotifState() {
 
     circle.classList.add("translate-x-6");
     circle.classList.remove("translate-x-1");
+  } else {
+    toggle.classList.add("bg-gray-300");
+    toggle.classList.remove("bg-green-500");
+
+    circle.classList.add("translate-x-1");
+    circle.classList.remove("translate-x-6");
   }
 }
 
 const profileBtn = document.getElementById("profileBtn");
 const dropdown = document.getElementById("profileDropdown");
 
-profileBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    dropdown.classList.toggle("hidden");
-});
+if (profileBtn && dropdown) {
+    profileBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle("hidden");
+    });
 
-document.addEventListener("click", () => {
-    dropdown.classList.add("hidden");
-});
+    document.addEventListener("click", () => {
+        dropdown.classList.add("hidden");
+    });
 
-profileBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    dropdown.classList.toggle("show");
-});
+    profileBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle("show");
+    });
 
-document.addEventListener("click", () => {
-    dropdown.classList.remove("show");
-});
+    document.addEventListener("click", () => {
+        dropdown.classList.remove("show");
+    });
+}
 
 if (window.location.pathname.includes("absen.html")) {
     loadHistory();

@@ -149,10 +149,16 @@ const password = document.getElementById("password");
 
 if (togglePassword && password) {
     togglePassword.addEventListener("click", () => {
-        console.log("Toggle password visibility");
-        const hidden = password.type === "password";
-        password.type = hidden ? "text" : "password";
-        togglePassword.textContent = hidden ? "🙈" : "👁️";
+        const input = document.getElementById("password");
+        const eye = document.getElementById("iconEye");
+        const eyeOff = document.getElementById("iconEyeOff");
+
+        const isPassword = input.type === "password";
+
+        input.type = isPassword ? "text" : "password";
+
+        eye.classList.toggle("hidden", !isPassword);
+        eyeOff.classList.toggle("hidden", isPassword);
     });
 }
 

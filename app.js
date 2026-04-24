@@ -598,23 +598,23 @@ async function loadMap() {
     markers.forEach(m => map.removeLayer(m));
     markers = [];
 
-    data.forEach(item => {
+    // data.forEach(item => {
 
-        console.log(item.latitude, typeof item.latitude);
-        console.log(item.longitude, typeof item.longitude);
-        const marker = L.marker([item.latitude, item.longitude])
-            .addTo(map)
-            .bindPopup(`
-                <b>${new Date(item.timestamp).toLocaleString()}</b><br>
-                Status: ${item.status}
-            `);
+    //     console.log(item.latitude, typeof item.latitude);
+    //     console.log(item.longitude, typeof item.longitude);
+    //     const marker = L.marker([item.latitude, item.longitude])
+    //         .addTo(map)
+    //         .bindPopup(`
+    //             <b>${new Date(item.timestamp).toLocaleString()}</b><br>
+    //             Status: ${item.status}
+    //         `);
 
-        markers.push(marker);
-    });
+    //     markers.push(marker);
+    // });
 
-    if (data.length > 0) {
-        map.setView([data[0].latitude, data[0].longitude], 15);
-    }
+    // if (data.length > 0) {
+    //     map.setView([data[0].latitude, data[0].longitude], 15);
+    // }
 }
 
 async function loadMyAttendance() {
@@ -1039,7 +1039,7 @@ if (toggle) {
 
 function debugLog(msg) {
   console.log(msg);
-  alert(msg);
+//   alert(msg);
 }
 
 async function loadNotifState() {
@@ -1165,23 +1165,69 @@ const profileBtn = document.getElementById("profileBtn");
 const dropdown = document.getElementById("profileDropdown");
 
 if (profileBtn && dropdown) {
+    // profileBtn.addEventListener("click", (e) => {
+    //     e.stopPropagation();
+    //     dropdown.classList.toggle("hidden");
+    // });
+
+    // document.addEventListener("click", () => {
+    //     dropdown.classList.add("hidden");
+    // });
+
+    // profileBtn.addEventListener("click", (e) => {
+    //     e.stopPropagation();
+    //     dropdown.classList.toggle("show");
+    // });
+
+    // document.addEventListener("click", () => {
+    //     dropdown.classList.remove("show");
+    // });
+
+    let isOpen = false;
+
     profileBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        dropdown.classList.toggle("hidden");
+
+        if (!isOpen) {
+            openDropdown();
+        } else {
+            closeDropdown();
+        }
     });
 
+    // klik luar → close
     document.addEventListener("click", () => {
-        dropdown.classList.add("hidden");
+        closeDropdown();
     });
 
-    profileBtn.addEventListener("click", (e) => {
+    // biar klik di dalam dropdown ga nutup
+    dropdown.addEventListener("click", (e) => {
         e.stopPropagation();
-        dropdown.classList.toggle("show");
     });
 
-    document.addEventListener("click", () => {
-        dropdown.classList.remove("show");
-    });
+    function openDropdown() {
+        isOpen = true;
+
+        dropdown.classList.remove("pointer-events-none");
+
+        requestAnimationFrame(() => {
+            dropdown.classList.remove("opacity-0", "scale-95", "-translate-y-2");
+            dropdown.classList.add("opacity-100", "scale-100", "translate-y-0");
+        });
+    }
+
+    function closeDropdown() {
+        if (!isOpen) return;
+
+        isOpen = false;
+
+        dropdown.classList.add("opacity-0", "scale-95", "-translate-y-2");
+        dropdown.classList.remove("opacity-100", "scale-100", "translate-y-0");
+
+        setTimeout(() => {
+            dropdown.classList.add("pointer-events-none");
+        }, 200); // sesuai duration
+    }
 }
 
 if (window.location.pathname.includes("absen.html")) {

@@ -63,10 +63,45 @@ async function checkRole() {
 }
 
 // LOGIN
+// async function login() {
+//     console.log("Login Clicked");
+//     const email = document.getElementById('email').value;
+//     const password = document.getElementById('password').value;
+
+//     const { data, error } = await supabaseClient.auth.signInWithPassword({
+//         email,
+//         password
+//     });
+
+//     if (error) {
+//         console.log(error);
+//         alert("Login gagal");
+//         return;
+//     }
+
+//     window.location.href = "dashboard.html";
+// }
+
 async function login() {
-    console.log("Login Clicked");
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+
+    const btnText = document.getElementById("btnText");
+    const loadingIcon = document.getElementById("loadingIcon");
+    const errorMsg = document.getElementById("errorMsg");
+
+    errorMsg.classList.add("hidden");
+
+    if (!email || !password) {
+        errorMsg.textContent = "Email & password wajib diisi";
+        errorMsg.classList.remove("hidden");
+        return;
+    }
+
+    // loading state
+    btnText.textContent = "Processing...";
+    loadingIcon.classList.remove("hidden");
+    btnLogin.disabled = true;
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
@@ -74,14 +109,18 @@ async function login() {
     });
 
     if (error) {
-        console.log(error);
-        alert("Login gagal");
+        errorMsg.textContent = "Login gagal: " + error.message;
+        errorMsg.classList.remove("hidden");
+
+        btnText.textContent = "Login";
+        loadingIcon.classList.add("hidden");
+        btnLogin.disabled = false;
         return;
     }
 
-    window.location.href = "dashboard.html";
+    // SUCCESS → pakai overlay
+    window.showSuccessAndRedirect();
 }
-
 
 // LOGOUT
 // async function logout() {
@@ -103,6 +142,18 @@ function goToAdmin() {
 const btnLogin = document.getElementById("btnLogin");
 if (btnLogin) {
     btnLogin.addEventListener("click", login);
+}
+
+const togglePassword = document.getElementById("togglePassword");
+const password = document.getElementById("password");
+
+if (togglePassword && password) {
+    togglePassword.addEventListener("click", () => {
+        console.log("Toggle password visibility");
+        const hidden = password.type === "password";
+        password.type = hidden ? "text" : "password";
+        togglePassword.textContent = hidden ? "🙈" : "👁️";
+    });
 }
 
 const btnAbsen = document.getElementById("btnAbsen");

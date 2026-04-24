@@ -19,18 +19,26 @@
     <!-- Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-sky-100 min-h-screen p-6">
+<body class="bg-sky-100 min-h-screen p-4 space-y-4">
 
     <div class="max-w-5xl mx-auto space-y-8">
-        <h2 class="text-3xl font-bold">
+        <!-- <h2 class="text-3xl font-bold">
             🔐 Admin Panel
-        </h2>
+        </h2> -->
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 class="text-2xl font-bold">🔐 Admin Panel</h2>
+
+            <button onclick="window.location.href='dashboard.html'"
+                class="text-sm bg-white px-3 py-2 rounded-lg shadow hover:bg-gray-100">
+                ← Back
+            </button>
+        </div>
 
         <!-- CARD TAMBAH USER -->
-        <div class="bg-white p-6 rounded-2xl shadow-md">
+        <div class="bg-white p-6 rounded-xl shadow-sm border">
             <h3 class="text-xl font-semibold mb-4">Tambah User</h3>
 
-            <div class="grid md:grid-cols-2 gap-4">
+            <!-- <div class="grid md:grid-cols-2 gap-4">
 
                 <input type="email" id="newEmail" placeholder="Email"
                     class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -47,16 +55,48 @@
                     <option value="admin">Admin</option>
                 </select>
 
+            </div> -->
+
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+
+                <div>
+                    <label class="text-gray-500">Email</label>
+                    <input type="email" id="newEmail"
+                        class="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="text-gray-500">Password</label>
+                    <input type="password" id="newPassword"
+                        class="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="text-gray-500">Nama</label>
+                    <input type="text" id="newName"
+                        class="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="text-gray-500">Role</label>
+                    <select id="newRole"
+                        class="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
             </div>
 
             <button id="btnAddUser"
-                class="mt-4 w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                class="mt-4 w-full bg-green-600 text-white py-2 rounded-lg 
+                        hover:bg-green-700 transition active:scale-95">
                 Add User
             </button>
         </div>
 
         <!-- CARD USER LIST -->
-        <div class="bg-white p-6 rounded-2xl shadow-md">
+        <div class="bg-white p-6 rounded-xl shadow-sm border">
             <h3 class="text-xl font-semibold mb-4">Daftar User</h3>
             <div id="userList" class="space-y-2"></div>
         </div>
@@ -68,7 +108,7 @@
         </div> -->
 
         <!-- TABLE ATTENDANCE -->
-         <div class="overflow-x-auto">
+         <!-- <div class="overflow-x-auto">
             <table class="bg-white border-collapse min-w-full border border-gray-500 text-sm">
                 <thead id="rekapHead"></thead>
                 <tbody id="rekapBody"></tbody>
@@ -78,16 +118,36 @@
         <button id="btnExportExcel"
             class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
             Export Excel
-        </button>
+        </button> -->
+
+        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+
+            <div class="px-4 pt-4 pb-2 flex justify-between items-center">
+                <h3 class="font-semibold">📊 Rekap Absensi</h3>
+
+                <button id="btnExportExcel"
+                    class="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700">
+                    Export
+                </button>
+            </div>
+
+            <div class="overflow-x-auto p-2">
+                <table class="min-w-full text-sm">
+                    <thead id="rekapHead" class="bg-gray-50"></thead>
+                    <tbody id="rekapBody" class="divide-y"></tbody>
+                </table>
+            </div>
+
+        </div>
 
         <!-- CARD INSERT ATTENDANCE -->
-        <div class="bg-white p-6 rounded-2xl shadow-md">
+        <div class="bg-white p-6 rounded-xl shadow-sm border">
             <h3 class="text-xl font-semibold mb-4">Add Attendance</h3>
 
-            <div class="grid md:grid-cols-2 gap-4">
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
 
                 <select id="userAttendance"
-                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    class="mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                 </select>
 
                 <select id="statusAttendance"
@@ -103,7 +163,8 @@
             </div>
 
             <button id="btnAddAttendance" 
-                class="mt-4 w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                class="mt-4 w-full bg-green-600 text-white py-2 rounded-lg 
+                        hover:bg-green-700 transition active:scale-95">
                 Add Attendance
             </button>
         </div>

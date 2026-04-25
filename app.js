@@ -1122,7 +1122,7 @@ function debugLog(msg) {
 }
 
 async function loadNotifState() {
-  alert("Standalone: " + window.navigator.standalone);
+//   alert("Standalone: " + window.navigator.standalone);
   debugLog("🔵 loadNotifState start");
 
   const { data } = await supabaseClient.auth.getUser();

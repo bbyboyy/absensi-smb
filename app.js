@@ -172,10 +172,29 @@ if (btnAdmin) {
     btnAdmin.addEventListener("click", goToAdmin);
 }
 
-const btnIzin = document.getElementById("btnIzin");
+// const btnIzin = document.getElementById("btnIzin");
+console.log("btnIzin disabled:", btnIzin.disabled);
 if (btnIzin) {
     btnIzin.addEventListener("click", kirimIzin);
 }
+
+// document.addEventListener("DOMContentLoaded", () => {
+//     console.log("DOM READY");
+//     const btnIzin = document.getElementById("btnIzin");
+
+//     console.log("btnIzin:", btnIzin);
+
+//     if (!btnIzin) {
+//         alert("btnIzin tidak ditemukan!");
+//         return;
+//     }
+
+//     btnIzin.addEventListener("click", (e) => {
+//         e.stopPropagation();
+//         console.log("CLICK IZIN DETECTED");
+//         alert("CLICK IZIN");
+//     });
+// });
 
 // document.getElementById("btnAbsen")
 //     .addEventListener("click", async () => {
@@ -251,33 +270,49 @@ async function checkTodayAttendance() {
 
     const statusElement = document.getElementById("attendanceStatus");
     const btnAbsen = document.getElementById("btnAbsen");
+    const btnIzin = document.getElementById("btnIzin");
 
     // Default disable dulu
     btnAbsen.disabled = true;
+    btnIzin.disabled = true;
 
     // Kalau bukan Minggu
-    // if (day !== 0) {
-    //     statusElement.innerHTML = "⛔ Bukan Hari Absensi";
-    //     statusElement.style.color = "gray";
-    //     btnAbsen.innerText = "ABSEN TIDAK TERSEDIA";
-    //     return;
-    // }
+    if (day !== 0) {
+        statusElement.innerHTML = "⛔ Bukan Hari Absensi";
+        statusElement.style.color = "gray";
+        btnAbsen.innerText = "ABSEN TIDAK TERSEDIA";
+        btnAbsen.classList.remove("bg-green-500", "hover:bg-green-600");
+        btnAbsen.classList.add("bg-gray-400", "hover:bg-gray-500");
+
+        btnIzin.innerText = "IZIN TIDAK TERSEDIA";
+        btnIzin.classList.remove("bg-blue-500", "hover:bg-blue-600");
+        btnIzin.classList.add("bg-gray-400", "hover:bg-gray-500");
+        return;
+    }
 
     if (hour < TIME_CONFIG.ABSEN_START) {
         statusElement.innerHTML = "⏳ Absensi dibuka pukul 06:00";
         statusElement.style.color = "orange";
-        btnAbsen.innerText = "BELUM WAKTU";
+        btnAbsen.innerText = "ABSENSI BELUM DIBUKA (06:00)";
         btnAbsen.classList.remove("bg-green-500", "hover:bg-green-600");
         btnAbsen.classList.add("bg-gray-400", "hover:bg-gray-500");
+
+        btnIzin.innerText = "IZIN BELUM DIBUKA (06:00)";
+        btnIzin.classList.remove("bg-blue-500", "hover:bg-blue-600");
+        btnIzin.classList.add("bg-gray-400", "hover:bg-gray-500");
         return;
     }
 
     if (hour >= TIME_CONFIG.ABSEN_END) {
         statusElement.innerHTML = "⌛ Absensi sudah ditutup (12:00)";
         statusElement.style.color = "red";
-        btnAbsen.innerText = "ABSEN DITUTUP";
+        btnAbsen.innerText = "ABSEN DITUTUP (12:00)";
         btnAbsen.classList.remove("bg-green-500", "hover:bg-green-600");
         btnAbsen.classList.add("bg-gray-400", "hover:bg-gray-500");
+
+        btnIzin.innerText = "IZIN DITUTUP (12:00)";
+        btnIzin.classList.remove("bg-blue-500", "hover:bg-blue-600");
+        btnIzin.classList.add("bg-gray-400", "hover:bg-gray-500");
         return;
     }
 
@@ -301,11 +336,15 @@ async function checkTodayAttendance() {
         statusElement.style.color = "green";
         btnAbsen.innerText = "SUDAH ABSEN";
         btnAbsen.disabled = true;
+        btnIzin.innerText = "SUDAH ABSEN";
+        btnIzin.disabled = true;
     } else {
         statusElement.innerHTML = "❌ Belum Absen Hari Ini";
         statusElement.style.color = "red";
         btnAbsen.innerText = "ABSEN HADIR";
         btnAbsen.disabled = false;
+        btnIzin.innerText = "KIRIM IZIN";
+        btnIzin.disabled = false;
     }
 
     if (btnAbsen.disabled) {
@@ -315,6 +354,15 @@ async function checkTodayAttendance() {
     else {
         btnAbsen.classList.remove("bg-gray-400", "hover:bg-gray-500");
         btnAbsen.classList.add("bg-green-500", "hover:bg-green-600");
+    }
+
+    if (btnIzin.disabled) {
+        btnIzin.classList.remove("bg-blue-500", "hover:bg-blue-600");
+        btnIzin.classList.add("bg-gray-400", "hover:bg-gray-500");
+    }
+    else {
+        btnIzin.classList.remove("bg-gray-400", "hover:bg-gray-500");
+        btnIzin.classList.add("bg-blue-500", "hover:bg-blue-600");
     }
 }
 
@@ -466,16 +514,39 @@ function setLoading(isLoading, text = "⏳ Memproses...") {
 
 // IZIN
 async function kirimIzin() {
+    console.log("Kirim Izin Clicked");
+    const btnIzin = document.getElementById("btnIzin");
+    btnIzin.disabled = true;
+    btnIzin.innerText = "Mengirim...";
 
     const reason = document.getElementById("izinReason").value.trim();
 
     if (!reason) {
         alert("Isi alasan terlebih dahulu.");
+        btnIzin.disabled = false;
+        btnIzin.innerText = "Kirim Izin";
         return;
     }
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
+
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    const { data: existing } = await supabaseClient
+        .from("attendance")
+        .select("id")
+        .eq("userid", user.id)
+        .gte("timestamp", todayStr + "T00:00:00")
+        .lte("timestamp", todayStr + "T23:59:59")
+        .limit(1);
+
+    if (existing && existing.length > 0) {
+        alert("Sudah ada absensi hari ini");
+        btnIzin.disabled = false;
+        btnIzin.innerText = "Kirim Izin";
+        return;
+    }
 
     const { error } = await supabaseClient
         .from("attendance")
@@ -492,6 +563,8 @@ async function kirimIzin() {
     if (error) {
         alert("Gagal kirim izin.");
         console.log(error);
+        btnIzin.disabled = false;
+        btnIzin.innerText = "Kirim Izin";
         return;
     }
 
@@ -1125,7 +1198,7 @@ async function loadNotifState() {
     .select("is_active")
     .eq("endpoint", sub.endpoint)
     .eq("user_id", data.user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     debugLog("❌ DB Error: " + error.message);

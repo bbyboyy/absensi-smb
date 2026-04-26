@@ -5,7 +5,9 @@ export const TIME_CONFIG = {
 };
 
 export const OFFICE_CONFIG = {
-  LAT: -6.262410,
-  LNG: 106.589714,
+  // LAT: -6.262410,
+  // LNG: 106.589714,
+  LAT: -6.185027677797336,
+  LNG: 106.6355717218515,
   MAX_RADIUS: 20
 };

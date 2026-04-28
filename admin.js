@@ -30,6 +30,24 @@ loadUsers();
 // loadAttendance();
 loadAttendanceTable();
 
+// =================== HELPERS ===================
+const togglePassword = document.getElementById("togglePassword");
+const password = document.getElementById("newPassword");
+
+if (togglePassword && password) {
+    togglePassword.addEventListener("click", () => {
+        const input = document.getElementById("newPassword");
+        const eye = document.getElementById("iconEye");
+        const eyeOff = document.getElementById("iconEyeOff");
+
+        const isPassword = input.type === "password";
+
+        input.type = isPassword ? "text" : "password";
+
+        eye.classList.toggle("hidden", !isPassword);
+        eyeOff.classList.toggle("hidden", isPassword);
+    });
+}
 
 // =================== CRUD USER ===================
 

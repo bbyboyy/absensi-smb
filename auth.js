@@ -6,64 +6,112 @@ window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log("auth loaded");
 
+// ==========================================
+// LOGOUT BUTTON
+// ==========================================
 const btnLogout = document.getElementById("btnLogout");
+
 if (btnLogout) {
     btnLogout.addEventListener("click", async () => {
         await logout();
     });
 }
 
-// 🔐 cek login
+// ==========================================
+// REQUIRE LOGIN
+// ==========================================
 window.requireAuth = async function () {
     console.log("requireAuth called");
-    const { data } = await supabaseClient.auth.getSession();
 
-    if (!data.session) {
-        window.location.replace("login.html");
+    const { data, error } = await supabaseClient.auth.getUser();
+
+    if (error || !data.user) {
+        console.log("User invalid / session expired");
+
+        await supabaseClient.auth.signOut();
+
+        if (!window.location.pathname.includes("login.html")) {
+            window.location.replace("login.html");
+        }
+
         return null;
     }
 
-    return data.session.user;
+    return data.user;
 };
 
-// 🔐 cek admin
+// ==========================================
+// REQUIRE ADMIN
+// ==========================================
 window.requireAdmin = async function () {
-    const user = await window.requireAuth();
-    if (!user) return;
+    const user = await requireAuth();
 
-    const { data } = await supabaseClient
+    if (!user) return null;
+
+    const { data, error } = await supabaseClient
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
 
-    if (!data || data.role !== "admin") {
+    if (error || !data || data.role !== "admin") {
         alert("Akses ditolak (admin only)");
         window.location.replace("dashboard.html");
+        return null;
     }
+
+    return user;
 };
 
-// 🚪 logout
+// ==========================================
+// LOGOUT
+// ==========================================
 window.logout = async function () {
     await supabaseClient.auth.signOut();
     window.location.replace("login.html");
 };
 
-// 🔁 auto logout listener
+// ==========================================
+// AUTH LISTENER
+// Jika session invalid / logout di device lain
+// ==========================================
 window.listenAuth = function () {
     console.log("listenAuth called");
-    supabaseClient.auth.onAuthStateChange((event) => {
+
+    supabaseClient.auth.onAuthStateChange(async (event) => {
+        console.log("AUTH EVENT:", event);
+
         if (event === "SIGNED_OUT") {
-            window.location.replace("login.html");
+            if (!window.location.pathname.includes("login.html")) {
+                window.location.replace("login.html");
+            }
+            return;
+        }
+
+        if (event === "TOKEN_REFRESHED") {
+            const { data } = await supabaseClient.auth.getUser();
+
+            if (!data.user) {
+                await supabaseClient.auth.signOut();
+            }
         }
     });
 };
 
-// 🔁 redirect kalau sudah login
+// ==========================================
+// REDIRECT LOGIN PAGE -> DASHBOARD
+// Kalau user masih login valid
+// ==========================================
 window.redirectIfLoggedIn = async function () {
-    const { data } = await supabaseClient.auth.getSession();
+    console.log("redirectIfLoggedIn called");
 
-    if (data.session) {
+    const { data, error } = await supabaseClient.auth.getUser();
+
+    if (error || !data.user) {
+        return;
+    }
+
+    if (!window.location.pathname.includes("dashboard.html")) {
         window.location.replace("dashboard.html");
     }
 };

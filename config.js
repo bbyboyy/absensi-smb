@@ -1,7 +1,7 @@
 export const TIME_CONFIG = {
   ABSEN_START: 6,
   LATE_START: 10,
-  ABSEN_END: 18
+  ABSEN_END: 12
 };
 
 export const OFFICE_CONFIG = {
@@ -9,5 +9,5 @@ export const OFFICE_CONFIG = {
   // LNG: 106.589714,
   LAT: -6.185027677797336,
   LNG: 106.6355717218515,
-  MAX_RADIUS: 20
+  MAX_RADIUS: 25
 };

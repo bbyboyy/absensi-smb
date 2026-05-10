@@ -1,7 +1,7 @@
 export const TIME_CONFIG = {
   ABSEN_START: 6,
-  LATE_START: 10,
-  ABSEN_END: 12
+  LATE_START: 12,
+  ABSEN_END: 10
 };
 
 export const OFFICE_CONFIG = {

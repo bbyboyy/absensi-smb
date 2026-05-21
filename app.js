@@ -172,10 +172,10 @@ if (btnAdmin) {
     btnAdmin.addEventListener("click", goToAdmin);
 }
 
-// const btnIzin = document.getElementById("btnIzin");
-console.log("btnIzin disabled:", btnIzin.disabled);
+const btnIzin = document.getElementById("btnIzin");
 if (btnIzin) {
     btnIzin.addEventListener("click", kirimIzin);
+    console.log("btnIzin disabled:", btnIzin.disabled);
 }
 
 // document.addEventListener("DOMContentLoaded", () => {
@@ -705,9 +705,10 @@ async function loadMyAttendance() {
     }
 
     const { data, error } = await supabaseClient
-        .from("attendance_user_view")
+        .from("attendance_view")
         .select("*")
-        .order("timestamp", { ascending: false });
+        .eq("userid", user.id)
+        .order("tanggal", { ascending: false });
 
     if (error) {
         console.error(error);
@@ -740,6 +741,20 @@ function renderMyAttendance(data) {
             badge = "bg-yellow-500";
         }
 
+        const date = new Date(item.tanggal);
+
+        const tanggal =
+            date.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            });
+
+        const jam =
+            date.toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
 
         html += `
         <div class="p-3 rounded-xl shadow-sm ${bg}">
@@ -750,16 +765,12 @@ function renderMyAttendance(data) {
                 </span>
 
                 <span class="text-xs text-gray-500">
-                    ${new Date(item.timestamp).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric"
-                    })}
+                    ${tanggal}
                 </span>
             </div>
 
             <div class="text-sm text-gray-700 mt-1">
-                ${new Date(item.timestamp).toLocaleTimeString()}
+                ${jam} WIB
             </div>
 
             ${item.reason ? `
@@ -783,8 +794,9 @@ async function loadMySummary() {
     }
 
     const { data, error } = await supabaseClient
-        .from("attendance_user_view")
-        .select("status");
+        .from("attendance_view")
+        .select("status")
+        .eq("userid", user.id);
 
     if (error) {
         console.error(error);
